@@ -1,22 +1,27 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import HomePage from "@/components/custom/HomePage";
+import Navbar from "@/components/custom/Navbar";
+
 
 export default function Home() {
+  const router = useRouter();
+
   return (
-    <main className="h-screen relative flex items-center justify-center flex-col">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient opacity-100 -z-10"></div>
-      {/* Content */}
-      <div className="relative z-10">
-        <h1 className="text-4xl font-bold mb-4">
-          Welcome to the KYC Application
-        </h1>
-        <Link href="/kyc-form">
-          <Button variant="default" className="m-2">
-            Fill KYC Application Form
-          </Button>
-        </Link>
-      </div>
-    </main>
+    <div className="h-screen">
+      <div className="absolute inset-0 bg-gradient opacity-40 pointer-events-none z-0"></div>
+      <Navbar />
+      <main className="h-[80%] relative flex items-center justify-center flex-col ">
+        <HomePage />
+        {/* <h1>Welcome to the KYC Application</h1>
+      <Link href="/kyc-form">
+      <Button variant="default" className="m-2">
+      Fill KYC Application Form
+      </Button>
+      </Link> */}
+      </main>
+    </div>
   );
 }

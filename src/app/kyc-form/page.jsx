@@ -1,10 +1,9 @@
 "use client";
 
+import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/app/store/index";
 import { setStep } from "@/app/store/slices/formSlice";
 import { Stepper } from "@mantine/core";
-import React from "react";
 import PersonalDetailForm from "./personalDetails/page";
 import AddressDetailsForm from "./addressDetails/page";
 import ProofOfIdentityForm from "./proofOfIdentity/page";
