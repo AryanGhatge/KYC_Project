@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,18 +12,13 @@ import {
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import InPersonPhoto from "@/../public/inpersonphoto.png";
-import { FaLocationDot } from "react-icons/fa6";
+import { FaLocationDot, FaCheck } from "react-icons/fa6";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-export default function InPersonVerificationForm({
-  handleStepChange,
-  step,
-  steps,
-}) {
+const InPersonVerificationForm = ({ onSubmit, initialData }) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
   const [image, setImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const formMethods = useForm({
     defaultValues: {
@@ -37,8 +32,24 @@ export default function InPersonVerificationForm({
     handleSubmit,
     setError,
     clearErrors,
+    setValue,
     formState: { errors },
   } = formMethods;
+
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.image) {
+        setImage(initialData.image);
+        setValue("image", initialData.image);
+        setPreviewUrl(URL.createObjectURL(initialData.image));
+      }
+      if (initialData.location) {
+        setLocation(initialData.location);
+        setValue("location", initialData.location);
+        setLocationAllowed(true);
+      }
+    }
+  }, [initialData, setValue]);
 
   const onDrop = (acceptedFiles) => {
     if (acceptedFiles.length > 0) {
@@ -51,6 +62,10 @@ export default function InPersonVerificationForm({
       } else {
         clearErrors("image");
         setImage(file);
+        setValue("image", file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        console.log("Preview URL:", url); // Check the URL here
       }
     }
   };
@@ -66,10 +81,10 @@ export default function InPersonVerificationForm({
   const handleLocationAccess = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const locationString = `${position.coords.latitude}, ${position.coords.longitude}`;
         setLocationAllowed(true);
-        setLocation(
-          `${position.coords.latitude}, ${position.coords.longitude}`
-        );
+        setLocation(locationString);
+        setValue("location", locationString);
       },
       (error) => {
         console.error(error);
@@ -78,7 +93,7 @@ export default function InPersonVerificationForm({
     );
   };
 
-  const onSubmit = (data) => {
+  const handleFormSubmit = (data) => {
     if (!locationAllowed) {
       setError("location", {
         type: "manual",
@@ -87,9 +102,7 @@ export default function InPersonVerificationForm({
       return;
     }
 
-    console.log("Form data:", data);
-    console.log("Image file:", image);
-    // Proceed with form submission
+    onSubmit(data, 6);
   };
 
   return (
@@ -100,8 +113,8 @@ export default function InPersonVerificationForm({
         </h2>
 
         <Form {...formMethods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {!locationAllowed && (
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+            {!locationAllowed ? (
               <Button
                 type="button"
                 onClick={handleLocationAccess}
@@ -111,6 +124,11 @@ export default function InPersonVerificationForm({
                 <FaLocationDot />
                 <span>Allow Location Access</span>
               </Button>
+            ) : (
+              <div className="flex items-center justify-center mb-6 py-3 text-lg text-green-600 bg-green-100 rounded-md">
+                <FaCheck className="mr-2" />
+                <span>Location Access Granted</span>
+              </div>
             )}
             <div className="mb-6 text-center">
               <p className="mb-4 text-lg text-gray-700">
@@ -150,7 +168,9 @@ export default function InPersonVerificationForm({
                       >
                         <input {...getInputProps()} />
                         <p className="text-gray-500">
-                          Drag & drop your image here, or click to select file
+                          {image
+                            ? `File selected: ${image.name}`
+                            : "Drag & drop your image here, or click to select file"}
                         </p>
                       </div>
                     </FormControl>
@@ -166,6 +186,22 @@ export default function InPersonVerificationForm({
               />
             </div>
 
+            {previewUrl && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-2">Image Preview:</h3>
+                <div className="flex justify-center">
+                  <Image
+                    src={previewUrl}
+                    alt="Uploaded Image Preview"
+                    width={300}
+                    height={300}
+                    objectFit="contain"
+                    className="rounded-lg"
+                  />
+                </div>
+              </div>
+            )}
+
             <Button
               type="submit"
               variant="default"
@@ -178,4 +214,6 @@ export default function InPersonVerificationForm({
       </div>
     </div>
   );
-}
+};
+
+export default InPersonVerificationForm;
