@@ -1,7 +1,6 @@
 "use client";
 
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/app/store/index";
 import { setStep } from "@/app/store/slices/formSlice";
 import { Stepper, Button, Group } from "@mantine/core";
 import React from "react";
