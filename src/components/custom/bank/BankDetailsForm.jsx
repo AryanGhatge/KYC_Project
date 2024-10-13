@@ -1,8 +1,8 @@
-import React from "react";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import { IoMdSave } from "react-icons/io";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,9 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { IoAddCircleOutline } from "react-icons/io5";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,17 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FaTrashAlt } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { setStep } from "@/app/store/slices/formSlice";
-import bankDetailsArraySchema from "@/lib/schemas/e-kyc/bankDetailSchema";
+import { Input } from "@/components/ui/input";
+import { IoAddCircleOutline } from "react-icons/io5";
+import { FaFile, FaFilePdf, FaTrashAlt } from "react-icons/fa";
+import { bankDetailSchema } from "@/lib/schemas/e-kyc/bankDetailSchema";
+import { useDropzone } from "react-dropzone";
 
-export default function BankDetailsForm({ step, handleStepChange }) {
-  const dispatch = useDispatch();
+const bankDetailsArraySchema = z.object({
+  bankDetails: z.array(bankDetailSchema),
+});
 
-  const formMethods = useForm({
+const BankDetailsForm = ({ onSubmit, initialData }) => {
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const form = useForm({
     resolver: zodResolver(bankDetailsArraySchema),
-    defaultValues: {
+    defaultValues: initialData || {
       bankDetails: [
         {
           bankName: "",
@@ -39,15 +40,47 @@ export default function BankDetailsForm({ step, handleStepChange }) {
           bankAccountNumber: "",
           ifscCode: "",
           primary: true,
+          uploadCancelledCheque: null,
         },
       ],
     },
   });
 
   const { fields, append, remove, update } = useFieldArray({
-    control: formMethods.control,
+    control: form.control,
     name: "bankDetails",
   });
+
+  const handlePrimaryChange = (index) => {
+    const updatedFields = fields.map((field, i) => ({
+      ...field,
+      primary: i === index,
+    }));
+    updatedFields.forEach((field, i) => {
+      form.setValue(`bankDetails.${i}.primary`, i === index);
+    });
+  };
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
+
+  // TODO: Image link should be set in localStorage but null is getting set
+  const handleSubmit = (data) => {
+    const submissionData = {
+      ...data,
+      bankDetails: data.bankDetails.map((detail) => ({
+        ...detail,
+        uploadCancelledCheque: detail.uploadCancelledCheque
+          ? detail.uploadCancelledCheque.name
+          : null,
+      })),
+    };
+    onSubmit(submissionData, 4);
+    // onSubmit(data, 4);
+  };
 
   const handleAddBankAccount = () => {
     append({
@@ -56,50 +89,64 @@ export default function BankDetailsForm({ step, handleStepChange }) {
       bankAccountNumber: "",
       ifscCode: "",
       primary: false,
+      uploadCancelledCheque: null,
     });
   };
 
-  const handlePrimaryChange = (index) => {
-    fields.forEach((_, i) => {
-      if (i !== index) {
-        update(i, { ...fields[i], primary: false });
-      } else {
-        update(i, {
-          bankName: fields[i].bankName,
-          accountType: fields[i].accountType,
-          bankAccountNumber: fields[i].bankAccountNumber,
-          ifscCode: fields[i].ifscCode,
-          primary: true,
-        });
-      }
-    });
-  };
+  // Drag and drop logic for cheque upload
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      "image/*": [],
+      "application/pdf": [],
+    },
+    maxSize: 5 * 1024 * 1024, // 5 MB max size
+    onDrop: (acceptedFiles) => {
+      setUploadedFiles(acceptedFiles);
+    },
+  });
 
-  const handleSave = (data) => {
-    localStorage.setItem("userBankDetails", JSON.stringify(data.bankDetails));
-  };
+  const renderFilePreview = (file) => {
+    if (!file) return null;
 
-  const handleSubmitForm = (data) => {
-    const { errors } = formMethods.formState;
-
-    if (Object.keys(errors).length > 0) {
-      console.error("Please fill in all required fields");
-      return;
+    if (typeof file === "string") {
+      // If file is a string (filename), render a generic file icon
+      return (
+        <div className="flex items-center">
+          <FaFile className="mr-2" />
+          <span>{file}</span>
+        </div>
+      );
     }
 
-    handleSave(data);
-
-    dispatch(setStep(step + 1));
-    handleStepChange(step + 1);
+    if (file.type.startsWith("image/")) {
+      return (
+        <img
+          src={URL.createObjectURL(file)}
+          alt="Preview"
+          className="max-w-full h-auto max-h-40 mt-2"
+        />
+      );
+    } else if (file.type === "application/pdf") {
+      return (
+        <Button
+          onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+          className="flex items-center"
+        >
+          <FaFilePdf className="mr-2" />
+          View PDF
+        </Button>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-14">
+    <div className="flex flex-col items-center justify-center min-h-screen py-12">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">Bank Details</h2>
-        <Form {...formMethods}>
+        <Form {...form}>
           <form
-            onSubmit={formMethods.handleSubmit(handleSubmitForm)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             {fields.map((field, index) => (
@@ -107,107 +154,151 @@ export default function BankDetailsForm({ step, handleStepChange }) {
                 key={field.id}
                 className="border border-gray-300 rounded-lg p-6 mb-4 bg-gray-50 shadow-md relative"
               >
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`bankDetails.${index}.bankName`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Bank Name
-                          </FormLabel>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name={`bankDetails.${index}.bankName`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Bank Name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`bankDetails.${index}.accountType`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Enter Bank Name"
-                              {...field}
-                              className="w-full"
-                            />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Account Type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Savings">Savings</SelectItem>
+                            <SelectItem value="Current">Current</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`bankDetails.${index}.bankAccountNumber`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Account Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="Enter Bank Account Number"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`bankDetails.${index}.ifscCode`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IFSC Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="Enter IFSC Code"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex items-center justify-center mt-4">
+                  <p className="">Verify my account by adding ₹1 (Pennydrop)</p>
+                  <p className="mx-2 text-gray-500">(OR)</p>
+                  <div className="">Upload Cancelled Cheque</div>
+                </div>
+
+                {/* Drag and Drop File Upload */}
+                <div className="mt-2">
+                  <FormField
+                    control={form.control}
+                    name={`bankDetails.${index}.cancelledCheque`}
+                    render={({ field: { onChange, value } }) => {
+                      const { getRootProps, getInputProps, isDragActive } =
+                        useDropzone({
+                          accept: {
+                            "image/*": [],
+                            "application/pdf": [],
+                          },
+                          maxSize: 5 * 1024 * 1024, // 5 MB max size
+                          onDrop: (acceptedFiles) => {
+                            onChange(acceptedFiles[0]);
+                          },
+                        });
+
+                      return (
+                        <FormItem>
+                          <FormLabel>Upload Cancelled Cheque</FormLabel>
+                          <FormControl>
+                            <div
+                              {...getRootProps()}
+                              className={`border-2 border-dashed rounded-lg p-4 cursor-pointer ${
+                                isDragActive
+                                  ? "border-blue-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              <input {...getInputProps()} />
+                              {value ? (
+                                <div className="flex justify-between">
+                                  <p className="text-sm">
+                                    {typeof value === "string"
+                                      ? value
+                                      : value.name}
+                                    {typeof value !== "string" && (
+                                      <p className="text-xs text-gray-500">
+                                        {(value.size / 1024 / 1024).toFixed(2)}{" "}
+                                        MB
+                                      </p>
+                                    )}
+                                  </p>
+
+                                  {renderFilePreview(value)}
+                                </div>
+                              ) : (
+                                <p className="text-center text-gray-500">
+                                  Drag and drop to upload a cancelled cheque
+                                  (Image/PDF)
+                                </p>
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`bankDetails.${index}.accountType`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Account Type
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            className="w-full"
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Account Type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Savings">Savings</SelectItem>
-                              <SelectItem value="Current">Current</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`bankDetails.${index}.bankAccountNumber`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Bank Account Number
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Enter Bank Account Number"
-                              {...field}
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`bankDetails.${index}.ifscCode`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            IFSC Code
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Enter IFSC Code"
-                              {...field}
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      );
+                    }}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
                   <FormField
-                    control={formMethods.control}
+                    control={form.control}
                     name={`bankDetails.${index}.primary`}
                     render={({ field }) => (
                       <FormItem className="flex items-center">
@@ -220,61 +311,48 @@ export default function BankDetailsForm({ step, handleStepChange }) {
                             disabled={fields.length === 1 && field.value}
                           />
                         </FormControl>
-                        <FormLabel className="ml-2 text-gray-700">
+                        <FormLabel className="ml-2 pb-2 text-gray-700">
                           Set as Primary Account
                         </FormLabel>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {fields.length > 1 && (
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        color="red"
-                        onClick={() => handleSave(formMethods.getValues())}
-                        className="flex items-center"
-                      >
-                        <IoMdSave className="mr-2 h-4 w-4 " />
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        color="red"
-                        onClick={() => remove(index)}
-                        className="flex items-center"
-                      >
-                        <FaTrashAlt className="mr-2" />
-                        Remove
-                      </Button>
-                    </div>
-                  )}
                 </div>
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => remove(index)}
+                    className="absolute top-2 right-2"
+                  >
+                    <FaTrashAlt className="mr-2" />
+                    Remove
+                  </Button>
+                )}
               </div>
             ))}
 
             <Button
               type="button"
               onClick={handleAddBankAccount}
-              variant="link"
-              className="mt-4 gap-2"
+              variant="outline"
+              className="mt-4"
             >
-              <IoAddCircleOutline size={20} />
-              Add Another Bank
+              <IoAddCircleOutline className="mr-2" />
+              Add Another Bank Account
             </Button>
 
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between mt-6">
               <Button
                 type="button"
-                onClick={() => handleStepChange(step - 1)}
+                onClick={() => onSubmit(form.getValues(), 3)}
                 variant="secondary"
               >
                 Back
               </Button>
               <Button type="submit" variant="default">
-                Confirm & Proceed
+                Next
               </Button>
             </div>
           </form>
@@ -282,4 +360,6 @@ export default function BankDetailsForm({ step, handleStepChange }) {
       </div>
     </div>
   );
-}
+};
+
+export default BankDetailsForm;

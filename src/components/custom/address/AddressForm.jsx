@@ -1,8 +1,7 @@
+import React, { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { setStep } from "@/app/store/slices/formSlice";
 import {
   Select,
   SelectContent,
@@ -20,19 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { addressDetailSchema } from "@/lib/schemas/e-kyc/addressDetailSchema";
 import {
   sampleCities,
   sampleDistricts,
   sampleStates,
 } from "@/lib/data/addressDetailsData";
-import addressDetailSchema from "@/lib/schemas/e-kyc/addressDetailSchema";
 
-export default function AddressForm({ handleStepChange, step, steps }) {
-  const dispatch = useDispatch();
-
+const AddressForm = ({ onSubmit, initialData }) => {
   const formMethods = useForm({
     resolver: zodResolver(addressDetailSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       permanentAddress: "",
       landmark: "",
       permanentCity: "",
@@ -43,26 +39,16 @@ export default function AddressForm({ handleStepChange, step, steps }) {
     },
   });
 
-  const handleSave = (data) => {
-    localStorage.setItem("userAddressData", JSON.stringify(data));
-  };
+  useEffect(() => {
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        formMethods.setValue(key, value);
+      });
+    }
+  }, [initialData, formMethods]);
 
   const handleSubmitForm = (data) => {
-    const { errors } = formMethods.formState;
-
-    if (Object.keys(errors).length > 0) {
-      console.error("Please fill in all required fields");
-      return;
-    }
-
-    console.log("Form Data:", data);
-    handleSave(data);
-    handleNext();
-  };
-
-  const handleNext = () => {
-    dispatch(setStep(step + 1));
-    handleStepChange(step + 1);
+    onSubmit(data, 2);
   };
 
   return (
@@ -274,13 +260,13 @@ export default function AddressForm({ handleStepChange, step, steps }) {
               <div className="flex justify-between mt-4">
                 <Button
                   type="button"
-                  onClick={() => handleStepChange(step - 1)}
+                  onClick={() => onSubmit(formMethods.getValues(), 1)}
                   variant="secondary"
                 >
                   Back
                 </Button>
                 <Button type="submit" variant="default">
-                  Confirm & Proceed
+                  Next
                 </Button>
               </div>
             </form>
@@ -289,4 +275,6 @@ export default function AddressForm({ handleStepChange, step, steps }) {
       </div>
     </div>
   );
-}
+};
+
+export default AddressForm;
