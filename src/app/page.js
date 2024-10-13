@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import HomePage from "@/components/custom/HomePage";
 import Navbar from "@/components/custom/Navbar";
 
-
 export default function Home() {
   const router = useRouter();
 
@@ -15,12 +14,6 @@ export default function Home() {
       <Navbar />
       <main className="h-[80%] relative flex items-center justify-center flex-col ">
         <HomePage />
-        {/* <h1>Welcome to the KYC Application</h1>
-      <Link href="/kyc-form">
-      <Button variant="default" className="m-2">
-      Fill KYC Application Form
-      </Button>
-      </Link> */}
       </main>
     </div>
   );
