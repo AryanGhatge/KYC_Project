@@ -1,7 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { setStep } from "@/app/store/slices/formSlice";
 import {
   Select,
   SelectContent,
@@ -20,16 +19,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import occupationData from "@/lib/data/occupationData";
-import annualSalaryData from "@/lib/data/annualSalaryData";
-import profileDetailSchema from "@/lib/schemas/e-kyc/profileDetailSchema";
+import { profileDetailSchema } from "@/lib/schemas/e-kyc/profileDetailSchema";
 
-export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
-  const dispatch = useDispatch();
+const occupationData = [
+  "Employed",
+  "Self-Employed",
+  "Business Owner",
+  "Student",
+  "Retired",
+  "Unemployed",
+];
 
-  const formMethods = useForm({
+const annualSalaryData = [
+  "Less than 5 LPA",
+  "5-10 LPA",
+  "10-15 LPA",
+  "15-25 LPA",
+  "More than 25 LPA",
+];
+
+const ProfileDetailsForm = ({ onSubmit, initialData }) => {
+  const form = useForm({
     resolver: zodResolver(profileDetailSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       gender: "Male",
       placeOfBirth: "",
       occupation: "",
@@ -39,98 +51,74 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
     },
   });
 
-  const handleNext = () => {
-    dispatch(setStep(step + 1));
-    handleStepChange(step + 1);
-  };
-
-  const handleSave = (data) => {
-    localStorage.setItem("userProfileData", JSON.stringify(data));
-  };
-
-  const handleSubmitForm = async (data) => {
-    const { errors } = formMethods.formState;
-
-    if (Object.keys(errors).length > 0) {
-      console.error("Please fill in all required fields");
-      return;
+  useEffect(() => {
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        form.setValue(key, value);
+      });
     }
+  }, [initialData, form]);
 
-    console.log(data);
-    handleSave(data);
-    handleNext();
+  const handleSubmit = (data) => {
+    onSubmit(data, 3);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen ">
-      <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border ">
-        <h2 className="text-2xl font-bold mb-6 text-center ">
-          Profile Details
-        </h2>
-        <Form {...formMethods}>
+    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+      <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
+        <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
+        <Form {...form}>
           <form
-            onSubmit={formMethods.handleSubmit(handleSubmitForm)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Gender */}
-              <div>
-                <FormField
-                  control={formMethods.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700">Gender *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="w-full"
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Others">Others</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Place of Birth */}
-              <div>
-                <FormField
-                  control={formMethods.control}
-                  name="placeOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="">Place of Birth *</FormLabel>
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="Enter Place of Birth"
-                          {...field}
-                          className="w-full"
-                        />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Gender" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Others">Others</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="placeOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Place of Birth *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Place of Birth" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               {/* Occupation */}
               <div>
                 <FormField
-                  control={formMethods.control}
+                  control={form.control}
                   name="occupation"
                   render={({ field }) => (
                     <FormItem>
@@ -164,7 +152,7 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
               {/* Annual Income */}
               <div>
                 <FormField
-                  control={formMethods.control}
+                  control={form.control}
                   name="annualIncome"
                   render={({ field }) => (
                     <FormItem>
@@ -204,7 +192,7 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
                   type="checkbox"
                   id="citizenship"
                   className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  {...formMethods.register("citizenship", { required: true })}
+                  {...form.register("citizenship", { required: true })}
                 />
                 <label
                   htmlFor="citizenship"
@@ -224,7 +212,7 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
                   type="checkbox"
                   id="informationConfirmation"
                   className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  {...formMethods.register("informationConfirmation", {
+                  {...form.register("informationConfirmation", {
                     required: true,
                   })}
                 />
@@ -263,19 +251,13 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
             <div className="flex justify-between mt-6">
               <Button
                 type="button"
-                onClick={() => handleStepChange(step - 1)}
+                onClick={() => onSubmit(form.getValues(), 2)}
                 variant="secondary"
               >
                 Back
               </Button>
-              <Button
-                type="submit"
-                onClick={() => {
-                  formMethods.handleSubmit(handleSubmitForm)();
-                }}
-                variant="default"
-              >
-                Confirm & Proceed
+              <Button type="submit" variant="default">
+                Next
               </Button>
             </div>
           </form>
@@ -283,4 +265,6 @@ export default function ProfileDetailsForm({ handleStepChange, step, steps }) {
       </div>
     </div>
   );
-}
+};
+
+export default ProfileDetailsForm;

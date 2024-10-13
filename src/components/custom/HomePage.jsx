@@ -1,14 +1,16 @@
 import Image from "next/image";
 import React from "react";
 import eKYCImage from "@/../public/Online_test.png";
-import Link from "next/link";
 import { Button } from "@mantine/core";
+import Link from "next/link";
 
-export default function HomePage(props) {
+// TODO: Change the whole home page
+
+const HomePage = () => {
   return (
     <div className="relative flex h-screen px-24">
       {/* Text Content */}
-      <div className="p-12 relative z-10 flex flex-col w-[60%] justify-center">
+      <div className="p-12 relative z-10 flex flex-col w-full lg:w-[60%] justify-center">
         <div className="text-5xl font-bold mb-4 flex gap-3 items-end">
           <p className="text-2xl font-light ">Welcome</p>
           <p className="font-medium">Ayush!!!</p>
@@ -34,10 +36,12 @@ export default function HomePage(props) {
           src={eKYCImage}
           alt="eKYC"
           layout="fill"
-          objectFit="cover"
+          style={{ objectFit: "cover" }}
           className="opacity-80"
         />
       </div>
     </div>
   );
-}
+};
+
+export default HomePage;

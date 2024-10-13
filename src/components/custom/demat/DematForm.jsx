@@ -1,6 +1,9 @@
-import React, { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -9,8 +12,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,17 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FaTrashAlt } from "react-icons/fa";
 import { IoAddCircleOutline } from "react-icons/io5";
-import dematArraySchema from "@/lib/schemas/e-kyc/dematSchema";
+import { FaFilePdf, FaTrashAlt, FaFile } from "react-icons/fa";
+import { dematSchema } from "@/lib/schemas/e-kyc/dematSchema";
+import { useDropzone } from "react-dropzone";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-export default function DematAccountForm({ handleStepChange, step, steps }) {
-  const [showForm, setShowForm] = useState(true);
-  const formMethods = useForm({
-    resolver: zodResolver(dematArraySchema),
-    defaultValues: {
+const dematDetailsArraySchema = z.object({
+  dematDetails: z.array(dematSchema),
+});
+
+const DematAccountForm = ({ onSubmit, initialData }) => {
+  const form = useForm({
+    resolver: zodResolver(dematDetailsArraySchema),
+    defaultValues: initialData || {
       dematDetails: [
         {
           depository: "NSDL",
@@ -41,10 +46,30 @@ export default function DematAccountForm({ handleStepChange, step, steps }) {
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
-    control: formMethods.control,
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
     name: "dematDetails",
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
+
+  const handleSubmit = (data) => {
+    // Convert File objects to file names before submitting
+    const submissionData = {
+      ...data,
+      dematDetails: data.dematDetails.map((detail) => ({
+        ...detail,
+        clientMasterCopy: detail.clientMasterCopy
+          ? detail.clientMasterCopy.name
+          : null,
+      })),
+    };
+    onSubmit(submissionData, 5);
+  };
 
   const handleAddDematAccount = () => {
     append({
@@ -57,40 +82,60 @@ export default function DematAccountForm({ handleStepChange, step, steps }) {
   };
 
   const handlePrimaryChange = (index) => {
-    fields.forEach((_, i) => {
-      update(i, { ...fields[i], primary: i === index });
+    const updatedFields = fields.map((field, i) => ({
+      ...field,
+      primary: i === index,
+    }));
+    updatedFields.forEach((field, i) => {
+      form.setValue(`dematDetails.${i}.primary`, i === index);
     });
   };
 
-  const handleFileChange = (e, index) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > MAX_FILE_SIZE) {
-        formMethods.setError(`dematDetails.${index}.clientMasterCopy`, {
-          type: "manual",
-          message: "File size must be less than 5 MB.",
-        });
-      } else {
-        formMethods.clearErrors(`dematDetails.${index}.clientMasterCopy`);
-        update(index, { ...fields[index], clientMasterCopy: file });
-      }
-    }
-  };
+  // TODO: Image link should be set in localStorage but null is getting set
+  const renderFilePreview = (file) => {
+    if (!file) return null;
 
-  const handleSubmitForm = (data) => {
-    console.log(data);
-    setShowForm(false);
+    if (typeof file === "string") {
+      // If file is a string (filename), render a generic file icon
+      return (
+        <div className="flex items-center">
+          <FaFile className="mr-2" />
+          <span>{file}</span>
+        </div>
+      );
+    }
+
+    if (file.type.startsWith("image/")) {
+      return (
+        <img
+          src={URL.createObjectURL(file)}
+          alt="Preview"
+          className="max-w-full h-auto max-h-40 mt-2"
+        />
+      );
+    } else if (file.type === "application/pdf") {
+      return (
+        <Button
+          onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+          className="flex items-center"
+        >
+          <FaFilePdf className="mr-2" />
+          View PDF
+        </Button>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-14">
+    <div className="flex flex-col items-center justify-center min-h-screen py-12">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">
           Demat Account Details
         </h2>
-        <Form {...formMethods}>
+        <Form {...form}>
           <form
-            onSubmit={formMethods.handleSubmit(handleSubmitForm)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             {fields.map((field, index) => (
@@ -99,122 +144,119 @@ export default function DematAccountForm({ handleStepChange, step, steps }) {
                 className="border border-gray-300 rounded-lg p-6 mb-4 bg-gray-50 shadow-md relative"
               >
                 <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`dematDetails.${index}.depository`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Depository
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            className="w-full"
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Depository" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="NSDL">NSDL</SelectItem>
-                              <SelectItem value="CDSL">CDSL</SelectItem>
-                              <SelectItem value="Others">Others</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`dematDetails.${index}.dpID`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">DP ID</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name={`dematDetails.${index}.depository`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Depository</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Enter DP ID"
-                              {...field}
-                              className="w-full"
-                            />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Depository" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`dematDetails.${index}.clientID`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Client ID
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Enter Client ID"
-                              {...field}
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                          <SelectContent>
+                            <SelectItem value="NSDL">NSDL</SelectItem>
+                            <SelectItem value="CDSL">CDSL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`dematDetails.${index}.dpID`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>DP ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter DP ID" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
+                <FormField
+                  control={form.control}
+                  name={`dematDetails.${index}.clientID`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter Client ID" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name={`dematDetails.${index}.clientMasterCopy`}
+                    render={({ field: { onChange, value } }) => {
+                      const { getRootProps, getInputProps, isDragActive } =
+                        useDropzone({
+                          accept: {
+                            "image/*": [],
+                            "application/pdf": [],
+                          },
+                          maxSize: MAX_FILE_SIZE,
+                          onDrop: (acceptedFiles) => {
+                            onChange(acceptedFiles[0]);
+                          },
+                        });
 
-                <div className="grid gap-6 mt-4">
-                  <div>
-                    <FormField
-                      control={formMethods.control}
-                      name={`dematDetails.${index}.clientMasterCopy`}
-                      render={() => (
+                      return (
                         <FormItem>
-                          <FormLabel className="text-gray-700">
-                            Upload Client Master Copy
-                          </FormLabel>
+                          <FormLabel>Upload Client Master Copy</FormLabel>
                           <FormControl>
-                            <input
-                              type="file"
-                              accept=".pdf, .jpg, .jpeg, .png"
-                              onChange={(e) => handleFileChange(e, index)}
-                              className="w-full"
-                            />
+                            <div
+                              {...getRootProps()}
+                              className={`border-2 border-dashed rounded-lg p-4 cursor-pointer ${
+                                isDragActive
+                                  ? "border-blue-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              <input {...getInputProps()} />
+                              {value ? (
+                                <div className="flex justify-between">
+                                  <p className="text-sm">
+                                    {typeof value === "string"
+                                      ? value
+                                      : value.name}
+                                    {typeof value !== "string" && (
+                                      <p className="text-xs text-gray-500">
+                                        {(value.size / 1024 / 1024).toFixed(2)}{" "}
+                                        MB
+                                      </p>
+                                    )}
+                                  </p>
+                                  {renderFilePreview(value)}
+                                </div>
+                              ) : (
+                                <p className="text-center text-gray-500">
+                                  Drag and drop to upload Client Master Copy
+                                  (Image/PDF)
+                                </p>
+                              )}
+                            </div>
                           </FormControl>
-                          <FormMessage>
-                            {formMethods.formState.errors[
-                              `dematDetails.${index}.clientMasterCopy`
-                            ]?.message && (
-                              <span className="text-red-500">
-                                {
-                                  formMethods.formState.errors[
-                                    `dematDetails.${index}.clientMasterCopy`
-                                  ]?.message
-                                }
-                              </span>
-                            )}
-                          </FormMessage>
+                          <FormMessage />
                         </FormItem>
-                      )}
-                    />
-                  </div>
+                      );
+                    }}
+                  />
                 </div>
-
                 <div className="flex items-center justify-between mt-4">
                   <FormField
-                    control={formMethods.control}
+                    control={form.control}
                     name={`dematDetails.${index}.primary`}
                     render={({ field }) => (
                       <FormItem className="flex items-center">
@@ -227,36 +269,48 @@ export default function DematAccountForm({ handleStepChange, step, steps }) {
                             disabled={fields.length === 1 && field.value}
                           />
                         </FormControl>
-                        <FormLabel className="ml-2">Primary Account</FormLabel>
+                        <FormLabel className="ml-2 text-gray-700">
+                          Set as Primary Account
+                        </FormLabel>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
+                {fields.length > 1 && (
                   <Button
                     type="button"
                     variant="outline"
-                    color="red"
                     onClick={() => remove(index)}
-                    className="flex items-center"
+                    className="absolute top-2 right-2"
                   >
                     <FaTrashAlt className="mr-2" />
                     Remove
                   </Button>
-                </div>
+                )}
               </div>
             ))}
+
             <Button
               type="button"
               onClick={handleAddDematAccount}
-              variant="link"
-              className="mt-4 gap-2"
+              variant="outline"
+              className="mt-4"
             >
-              <IoAddCircleOutline size={20} />
-              Add Another Account
+              <IoAddCircleOutline className="mr-2" />
+              Add Another Demat Account
             </Button>
 
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-between mt-6">
+              <Button
+                type="button"
+                onClick={() => onSubmit(form.getValues(), 4)}
+                variant="secondary"
+              >
+                Back
+              </Button>
               <Button type="submit" variant="default">
-                Confirm & Proceed
+                Next
               </Button>
             </div>
           </form>
@@ -264,4 +318,6 @@ export default function DematAccountForm({ handleStepChange, step, steps }) {
       </div>
     </div>
   );
-}
+};
+
+export default DematAccountForm;

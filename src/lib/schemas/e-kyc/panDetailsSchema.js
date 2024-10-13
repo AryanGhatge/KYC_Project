@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const panDetailsSchema = z.object({
+export const panDetailsSchema = z.object({
   panNumber: z
     .string()
     .min(10, "PAN Number must be at least 10 characters long")
@@ -26,5 +26,3 @@ const panDetailsSchema = z.object({
     "Person of Indian Origin",
   ]),
 });
-
-export default panDetailsSchema;

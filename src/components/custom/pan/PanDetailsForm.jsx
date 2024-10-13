@@ -1,4 +1,8 @@
-import { setStep } from "@/app/store/slices/formSlice";
+"use client";
+
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,18 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import panDetailsSchema from "@/lib/schemas/e-kyc/panDetailsSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { panDetailsSchema } from "@/lib/schemas/e-kyc/panDetailsSchema";
+import { z } from "zod";
 
-export default function PanDetailsForm({ handleStepChange, step, steps }) {
-  const dispatch = useDispatch();
-
+const PanDetailsForm = ({ onSubmit, initialData }) => {
   const formMethods = useForm({
     resolver: zodResolver(panDetailsSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       panNumber: "",
       mobileNumber: "",
       dateOfBirth: new Date(),
@@ -35,31 +34,21 @@ export default function PanDetailsForm({ handleStepChange, step, steps }) {
     },
   });
 
-  const handleNext = () => {
-    dispatch(setStep(step + 1)); // Move to the next step
-    handleStepChange(step + 1);
-  };
-
-  const handleSave = (data) => {
-    localStorage.setItem("userPanData", JSON.stringify(data));
-  };
-
-  const handleSubmitForm = async (data) => {
-    const { errors } = formMethods.formState;
-
-    if (Object.keys(errors).length > 0) {
-      console.error("Please fill in all required fields");
-      return;
+  useEffect(() => {
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        formMethods.setValue(key, value);
+      });
     }
+  }, [initialData, formMethods]);
 
-    console.log(data); // Handle form data here
-    handleSave(data); // Save form data to localStorage
-    handleNext(); // Proceed to the next step
+  const handleSubmitForm = (data) => {
+    onSubmit(data, 1);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg border-2 flex flex-col justify-between h-full">
+    <div className="flex flex-col items-center justify-center lg:min-h-screen">
+      <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg border-2 flex-col justify-between h-full">
         <div>
           <h2 className="text-2xl font-bold mb-6 text-center">
             Personal Details
@@ -206,4 +195,6 @@ export default function PanDetailsForm({ handleStepChange, step, steps }) {
       </div>
     </div>
   );
-}
+};
+
+export default PanDetailsForm;
