@@ -1,13 +1,15 @@
 import Image from "next/image";
 import React from "react";
 import eKYCImage from "@/../public/Online_test.png";
-import { Button, useComputedColorScheme } from "@mantine/core";
-import Link from "next/link";
+import { Button } from "@mantine/core";
 import Navbar from "./Navbar";
+import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
 
 const HomePage = () => {
-  const computedColorScheme = useComputedColorScheme("light");
-  const isDark = computedColorScheme === "dark";
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const router = useRouter();
 
   return (
     <div
@@ -36,7 +38,7 @@ const HomePage = () => {
                   <h1
                     className={`text-4xl sm:text-5xl lg:text-6xl font-bold ${
                       isDark ? "text-gray-300" : "text-gray-900"
-                    } dark:text-white transition-colors duration-300`}
+                    } transition-colors duration-300`}
                   >
                     Ayush!!!
                   </h1>
@@ -53,15 +55,16 @@ const HomePage = () => {
                 </p>
 
                 <div className="pt-4">
-                  <Link href="/e-kyc">
+                  {/* <Link href="/e-kyc"> */}
                     <Button
                       variant="gradient"
                       size="lg"
-                      className="h-12 px-8 text-base bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => router.push("/e-kyc")}
+                      className="h-12 px-8 text-base bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg hover:shadow-xl"
                     >
                       Get Started →
                     </Button>
-                  </Link>
+                  {/* </Link> */}
                 </div>
               </div>
             </div>
