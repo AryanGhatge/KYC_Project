@@ -7,19 +7,17 @@ import { useRouter } from "next/navigation";
 import { IoPerson } from "react-icons/io5";
 import {
   ActionIcon,
-  useComputedColorScheme,
-  useMantineColorScheme,
 } from "@mantine/core";
 import { IoMoon, IoSunny } from "react-icons/io5";
+import { useTheme } from "next-themes";
 
 const Navbar = () => {
   const router = useRouter();
-  const { setColorScheme } = useMantineColorScheme();
-  const computedColorScheme = useComputedColorScheme("light");
-  const isDark = computedColorScheme === "dark";
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   const toggleTheme = () => {
-    setColorScheme(isDark ? "light" : "dark");
+    setTheme(isDark ? "light" : "dark");
   };
 
   return (
