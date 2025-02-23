@@ -10,11 +10,17 @@ export default function Home() {
 
   return (
     <div className="h-screen">
-      <div className="absolute inset-0 bg-gradient opacity-40 pointer-events-none z-0"></div>
-      <Navbar />
-      <main className="h-[80%] relative flex items-center justify-center flex-col ">
         <HomePage />
-      </main>
-    </div>
+     </div> 
   );
+
+  // return (
+  //   <div className="h-screen">
+  //     <div className="absolute inset-0 bg-gradient opacity-40 pointer-events-none z-0"></div>
+  //     <Navbar />
+  //     <main className="h-[80%] relative flex items-center justify-center flex-col ">
+  //       <HomePage />
+  //     </main>
+  //   </div>
+  // );
 }
