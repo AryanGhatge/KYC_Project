@@ -5,6 +5,7 @@ import { Mail, Lock, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 
 const AuthComponent = ({ isLogin = true }) => {
   const [email, setEmail] = useState("");
@@ -44,7 +45,19 @@ const AuthComponent = ({ isLogin = true }) => {
       >
         {/* Left Panel */}
         <div className="w-full md:w-1/2 bg-indigo-600 p-12 text-white flex flex-col md:justify-between">
-          {/* ...existing left panel code... */}
+          <div>
+            <h2 className="text-3xl font-bold mb-6">KYC-Secure</h2>
+            <h3 className="text-2xl font-semibold mb-4">
+              Welcome to the Future of KYC
+            </h3>
+            <p className="mb-6">
+              Join thousands leveraging AI for secure, efficient KYC processes.
+              Experience faster verifications and enhanced data protection.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm">© 2024 KYC-Secure. All rights reserved.</p>
+          </div>
         </div>
 
         {/* Right Panel */}
@@ -124,7 +137,9 @@ const AuthComponent = ({ isLogin = true }) => {
 
             <div className="mb-6">
               <label
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className={`block text-sm font-bold mb-2 ${
+                  isDark ? "text-gray-300" : "text-gray-700"
+                }`}
                 htmlFor="password"
               >
                 Password
@@ -134,7 +149,11 @@ const AuthComponent = ({ isLogin = true }) => {
                   <Lock className="h-5 w-5 text-gray-400 " />
                 </span>
                 <input
-                  className="appearance-none border rounded w-full py-2 px-3 pl-10 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                  className={`appearance-none border ${
+                    isDark
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-700"
+                  } rounded w-full py-2 px-3 pl-10 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline`}
                   id="password"
                   type="password"
                   placeholder="••••••••"
@@ -177,7 +196,7 @@ const AuthComponent = ({ isLogin = true }) => {
             </div>
             <div className="mt-6 grid grid-cols-3 gap-3">
               <div>
-                <button
+                <Button
                   // onClick={() => handleSocialSignIn("google")}
                   className="w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
@@ -186,10 +205,10 @@ const AuthComponent = ({ isLogin = true }) => {
                     src="https://www.svgrepo.com/show/475656/google-color.svg"
                     alt="Google logo"
                   />
-                </button>
+                </Button>
               </div>
               <div>
-                <button
+                <Button
                   // onClick={() => handleSocialSignIn("linkedin")}
                   className="w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                 >
@@ -198,7 +217,7 @@ const AuthComponent = ({ isLogin = true }) => {
                     src="https://www.svgrepo.com/show/448234/linkedin.svg"
                     alt="LinkedIn logo"
                   />
-                </button>
+                </Button>
               </div>
               <div>
                 <button
