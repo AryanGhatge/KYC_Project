@@ -189,8 +189,11 @@ POST /auth/register
 **Request Body (JSON):**
 ```json
 {
-  "username": "testuser",
-  "password": "password123"
+    "name" : "testuser",
+    "email" : "testuser@gmail.com",
+    "password" : "1234",
+    "confirmedPassword" : "12345",
+    "mobileNo" : "2569874526"
 }
 ```
 
@@ -213,7 +216,7 @@ POST /auth/login
 **Request Body (JSON):**
 ```json
 {
-  "username": "testuser",
+  "email": "testuser@gmail.com",
   "password": "password123"
 }
 ```
