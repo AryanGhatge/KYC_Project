@@ -177,6 +177,56 @@ POST /demat/register-demat
 
 ---
 
+## 6. Authentication APIs
+
+### 6.1 User Registration
+
+**Endpoint:**
+```
+POST /auth/register
+```
+
+**Request Body (JSON):**
+```json
+{
+  "username": "testuser",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "User registered successfully"
+}
+```
+
+---
+
+### 6.2 User Login
+
+**Endpoint:**
+```
+POST /auth/login
+```
+
+**Request Body (JSON):**
+```json
+{
+  "username": "testuser",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "your_generated_jwt_token_here"
+}
+```
+
+---
+
 ## Notes
 
 - All requests must be sent in JSON format.
