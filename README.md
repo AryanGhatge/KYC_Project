@@ -238,3 +238,16 @@ POST /auth/login
 - Use the correct `Content-Type` header for file uploads (`multipart/form-data`).
 
 Let me know if you need further refinements! 🚀
+
+```
+```
+
+## .env file
+- PORT 
+- MONGO_URI 
+- SESSION_SECRET 
+- JWT_SECRET 
+
+```
+
+---
