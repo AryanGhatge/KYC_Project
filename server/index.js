@@ -1,4 +1,5 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("./config/passport");
 const MongoStore = require("connect-mongo");
@@ -23,9 +24,11 @@ db.dbConnect();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser());
 app.use(
   cors({
-    //origin: "http://your-frontend-domain.com",
+    origin: "*",
     credentials: true,
   })
 );

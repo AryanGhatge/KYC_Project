@@ -26,13 +26,13 @@ const userSchemaUpdated = new mongoose.Schema({
   },
   mobileNo: {
     type: String,
-    required: [true, "Mobile number is required"],
-    validate: {
+    //required: [true, "Mobile number is required"],
+    /*validate: {
       validator: function (v) {
         return /^\d{10}$/.test(v);
       },
       message: "Mobile number must be exactly 10 digits",
-    },
+    },*/
   },
   password: {
     type: String,
