@@ -3,7 +3,16 @@ const bcrypt = require("bcryptjs");
 
 module.exports.register = async (req, res) => {
   try {
-    const { email, password, confirmedPassword, name, mobileNo } = req.body;
+    const { password, confirmedPassword, name, mobileNo } = req.body;
+    const email = req.body.email;
+        console.log(
+          "User: ",
+          email,
+          password,
+          confirmedPassword,
+          name,
+          mobileNo
+        );
 
     // Check if user already exists
     const user = await updated_user.findOne({ email });
@@ -13,6 +22,7 @@ module.exports.register = async (req, res) => {
         success: false,
       });
     }
+
 
     // Validate password and confirmedPassword
     if (password !== confirmedPassword) {
@@ -53,7 +63,7 @@ module.exports.register = async (req, res) => {
 };
 
 exports.login = (req, res) => {
-  res.json({ message: "Login successful", user: req.user });
+  res.json({ message: "Login successful", user: req.user, success: true });
 };
 
 exports.logout = (req, res) => {
@@ -62,3 +72,7 @@ exports.logout = (req, res) => {
     res.json({ message: "Logout successful" });
   });
 };
+
+exports.isLoggedIn = (req, res) => {
+  
+}
