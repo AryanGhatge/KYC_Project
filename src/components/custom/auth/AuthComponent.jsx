@@ -59,6 +59,7 @@ const AuthComponent = ({ isLogin = true }) => {
       payload, // 🚀 Pass JSON data directly
       {
         headers: { "Content-Type": "application/json" }, // ✅ Headers go here, not inside the payload
+        withCredentials: true,
       }
     );
     // console.log(response);

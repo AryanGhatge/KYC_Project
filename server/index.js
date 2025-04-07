@@ -14,7 +14,11 @@ const { isAuthenticated } = require("./middleware/auth.middleware");
 require("dotenv").config();
 const db = require("./config/dbConnect");
 
+const cookieParser = require("cookie-parser");
+
+
 const app = express();
+app.use(cookieParser());
 
 // Connect Database
 db.dbConnect();
@@ -42,11 +46,8 @@ app.use(
   })
 );
 
-// Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Routes
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
 app.use("/v1/pan", isAuthenticated, panRoutes);
