@@ -37,13 +37,13 @@ const profileDetailSchema = new mongoose.Schema({
     },
   },
   annualIncome: {
-    type: Number,
+    type: String,
     required: [true, "Annual income is required"],
-    min: [0, "Annual income cannot be negative"],
-    validate: {
-      validator: Number.isInteger,
-      message: "Annual Income must be a valid number",
-    },
+    // min: [0, "Annual income cannot be negative"],
+    // validate: {
+    //   validator: Number.isInteger,
+    //   message: "Annual Income must be a valid number",
+    // },
   },
   citizenship: {
     type: Boolean,

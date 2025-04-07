@@ -44,7 +44,7 @@ const panSchema = new mongoose.Schema({
   iAm: {
     type: String,
     required: [true, "Identity type is required"],
-    enum: ["Individual", "Mutual"],
+    enum: ["Individual", "Non Resident Indian", "Foreign National", "Person of Indian Origin"],
   },
 });
 

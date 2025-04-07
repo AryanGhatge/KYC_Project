@@ -45,7 +45,7 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
   const form = useForm({
     resolver: zodResolver(profileDetailSchema),
     defaultValues: initialData || {
-      gender: "Male",
+      gender: "",
       placeOfBirth: "",
       occupation: "",
       annualIncome: "",

@@ -1,4 +1,4 @@
-const bankModel = require("../models/bank.model");
+const Bank = require("../models/bank.model");
 
 module.exports.registerBank = async (req, res) => {
   try {
@@ -6,7 +6,7 @@ module.exports.registerBank = async (req, res) => {
       req.body;
 
     // Check if Bank already exists
-    const existingBank = await PanInfo.findOne({ bankAccountNumber });
+    const existingBank = await Bank.findOne({ bankAccountNumber });
     if (existingBank) {
       return res.status(400).json({
         message: "Bank details already exists",
@@ -14,7 +14,7 @@ module.exports.registerBank = async (req, res) => {
     }
 
     // Store in DB using create()
-    const bankInfo = await bankModel.create({
+    const bankInfo = await Bank.create({
       bankName,
       accountType,
       bankAccountNumber,
