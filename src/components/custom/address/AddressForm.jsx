@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,8 +24,11 @@ import {
   sampleDistricts,
   sampleStates,
 } from "@/lib/data/addressDetailsData";
+import { showToast } from "@/lib/showToast";
+import { addressService } from "@/lib/apiService/addressService";
 
 const AddressForm = ({ onSubmit, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const formMethods = useForm({
     resolver: zodResolver(addressDetailSchema),
     defaultValues: initialData || {
@@ -47,8 +50,20 @@ const AddressForm = ({ onSubmit, initialData }) => {
     }
   }, [initialData, formMethods]);
 
-  const handleSubmitForm = (data) => {
-    onSubmit(data, 2);
+  const handleSubmitForm = async (data) => {
+    try {
+      const response = await addressService.registerAddress(data);
+      console.log("Address details submitted successfully:", response);
+      showToast.success("Details submitted successfully!");
+      onSubmit(data, 2);
+    } catch (error) {
+      console.error("Error submitting address details:", error);
+      showToast.error(
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -265,8 +280,8 @@ const AddressForm = ({ onSubmit, initialData }) => {
                 >
                   Back
                 </Button>
-                <Button type="submit" variant="default">
-                  Next
+                <Button type="submit" variant="default" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Next"}
                 </Button>
               </div>
             </form>
