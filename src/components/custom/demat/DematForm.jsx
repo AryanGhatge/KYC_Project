@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,6 +23,8 @@ import { IoAddCircleOutline } from "react-icons/io5";
 import { FaFilePdf, FaTrashAlt, FaFile } from "react-icons/fa";
 import { dematSchema } from "@/lib/schemas/e-kyc/dematSchema";
 import { useDropzone } from "react-dropzone";
+import { dematService } from "@/lib/apiService/dematService";
+import { showToast } from "@/lib/showToast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -31,6 +33,7 @@ const dematDetailsArraySchema = z.object({
 });
 
 const DematAccountForm = ({ onSubmit, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(dematDetailsArraySchema),
     defaultValues: initialData || {
@@ -57,18 +60,20 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
     }
   }, [initialData, form]);
 
-  const handleSubmit = (data) => {
-    // Convert File objects to file names before submitting
-    const submissionData = {
-      ...data,
-      dematDetails: data.dematDetails.map((detail) => ({
-        ...detail,
-        clientMasterCopy: detail.clientMasterCopy
-          ? detail.clientMasterCopy.name
-          : null,
-      })),
-    };
-    onSubmit(submissionData, 5);
+  const handleSubmit = async (data) => {
+    try {
+      const response = await dematService.registerDemat(data);
+      console.log("Demat account registered:", response);
+      showToast.success("Details submitted successfully!");
+      onSubmit(data, 5); // Move to next step
+    } catch (error) {
+      console.error("Error registering demat account:", error);
+      showToast.error(
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddDematAccount = () => {
@@ -309,8 +314,8 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
               >
                 Back
               </Button>
-              <Button type="submit" variant="default">
-                Next
+              <Button type="submit" variant="default" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Next"}
               </Button>
             </div>
           </form>
