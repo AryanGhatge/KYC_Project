@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { profileDetailSchema } from "@/lib/schemas/e-kyc/profileDetailSchema";
+import { showToast } from "@/lib/showToast";
+import { profileService } from "@/lib/apiService/profileService";
 
 const occupationData = [
   "Employed",
@@ -39,6 +41,7 @@ const annualSalaryData = [
 ];
 
 const ProfileDetailsForm = ({ onSubmit, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(profileDetailSchema),
     defaultValues: initialData || {
@@ -59,8 +62,20 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
     }
   }, [initialData, form]);
 
-  const handleSubmit = (data) => {
-    onSubmit(data, 3);
+  const handleSubmit = async (data) => {
+    try {
+      const response = await profileService.createProfile(data);
+      console.log("Profile details submitted successfully:", response);
+      showToast.success("Details submitted successfully!");
+      onSubmit(data, 3);
+    } catch (error) {
+      showToast.error(
+        error.message || "Something went wrong. Please try again."
+      );
+      console.error("Error submitting profile details:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -256,8 +271,8 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
               >
                 Back
               </Button>
-              <Button type="submit" variant="default">
-                Next
+              <Button type="submit" variant="default" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Next"}
               </Button>
             </div>
           </form>

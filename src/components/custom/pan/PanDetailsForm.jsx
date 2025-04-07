@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/select";
 import { panDetailsSchema } from "@/lib/schemas/e-kyc/panDetailsSchema";
 import { z } from "zod";
+import { showToast } from "@/lib/showToast";
+import { panService } from "@/lib/apiService/panService";
 
 const PanDetailsForm = ({ onSubmit, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const formMethods = useForm({
     resolver: zodResolver(panDetailsSchema),
     defaultValues: initialData || {
@@ -42,8 +45,20 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
     }
   }, [initialData, formMethods]);
 
-  const handleSubmitForm = (data) => {
-    onSubmit(data, 1);
+  const handleSubmitForm = async (data) => {
+    try {
+      const response = await panService.registerPan(data);
+      console.log("PAN details submitted successfully:", response);
+      showToast.success("Details submitted successfully!");
+      onSubmit(data, 1);
+    } catch (error) {
+      console.error("Error submitting PAN details:", error);
+      showToast.error(
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,7 +85,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
                         <FormControl>
                           <input
                             type="text"
-                            placeholder="Enter PAN Number"
+                            placeholder="Enter PAN Number (ABCDE1234F)"
                             {...field}
                             className="w-full p-2 border border-gray-300 rounded"
                           />
@@ -185,8 +200,8 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
               </div>
 
               <div className="flex justify-end mt-4">
-                <Button type="submit" variant="default">
-                  Confirm & Proceed
+                <Button type="submit" variant="default" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Next"}
                 </Button>
               </div>
             </form>

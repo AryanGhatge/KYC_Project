@@ -1,21 +1,80 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const AuthComponent = ({ isLogin = true }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [mobileNo, setMobileNo] = useState("");
+  const [errors, setErrors] = useState({});
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const handleSubmit = async (e) => {};
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!isLogin) {
+      // Mobile number validation (Indian format: +91 followed by 10 digits)
+      const mobileRegex = /^91[6-9]\d{9}$/;
+      if (!mobileRegex.test(mobileNo)) {
+        newErrors.mobileNo =
+          "Please enter valid Indian mobile number (91XXXXXXXXXX)";
+      }
+
+      // Password confirmation
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const payload = isLogin
+      ? { email, password }
+      : {
+          email,
+          password,
+          confirmedPassword: confirmPassword,
+          name: fullName,
+          mobileNo: mobileNo,
+        };
+
+    const response = await axios.post(
+      isLogin ? `${BASE_URL}/auth/login` : `${BASE_URL}/auth/register`,
+      payload, // 🚀 Pass JSON data directly
+      {
+        headers: { "Content-Type": "application/json" }, // ✅ Headers go here, not inside the payload
+      }
+    );
+    // console.log(response);
+    if (response.data.success === true) {
+      console.log(response.data);
+      const data = await response.data;
+      if (data.success) {
+        router.push("/");
+      } else {
+        alert(data.message);
+      }
+    } else {
+      console.error("Error:", response);
+      alert("An error occurred. Please try again.");
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.9 },
@@ -103,6 +162,43 @@ const AuthComponent = ({ isLogin = true }) => {
               </div>
             )}
 
+            {/* Mobile Number Field */}
+            <div className="mb-4">
+              <label
+                className={`block ${
+                  isDark ? "text-gray-300" : "text-gray-700"
+                } text-sm font-bold mb-2`}
+              >
+                Mobile Number
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Phone
+                    className={`h-5 w-5 ${
+                      isDark ? "text-gray-500" : "text-gray-400"
+                    }`}
+                  />
+                </span>
+                <input
+                  className={`appearance-none border ${
+                    isDark
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-700"
+                  } rounded w-full py-2 px-3 pl-10 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                  type="tel"
+                  placeholder="91XXXXXXXXXX"
+                  value={mobileNo}
+                  onChange={(e) => setMobileNo(e.target.value)}
+                  required
+                />
+              </div>
+              {errors.mobileNo && (
+                <p className="text-red-500 text-xs italic mt-1">
+                  {errors.mobileNo}
+                </p>
+              )}
+            </div>
+
             {/* Email Input */}
             <div className="mb-4">
               <label
@@ -135,26 +231,25 @@ const AuthComponent = ({ isLogin = true }) => {
               </div>
             </div>
 
-            <div className="mb-6">
+            {/* Password field */}
+            <div className="mb-2">
               <label
                 className={`block text-sm font-bold mb-2 ${
                   isDark ? "text-gray-300" : "text-gray-700"
                 }`}
-                htmlFor="password"
               >
                 Password
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 mb-3">
-                  <Lock className="h-5 w-5 text-gray-400 " />
+                <span className="absolute inset-y-0 left-0 bottom-3 flex items-center pl-3">
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </span>
                 <input
                   className={`appearance-none border ${
                     isDark
                       ? "bg-gray-700 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-700"
-                  } rounded w-full py-2 px-3 pl-10 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline`}
-                  id="password"
+                  } rounded w-full py-2 px-3 pl-10 mb-3 leading-tight focus:outline-none focus:shadow-outline`}
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -163,7 +258,49 @@ const AuthComponent = ({ isLogin = true }) => {
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
+
+            {/* Confirm Password field (only for signup) */}
+            {!isLogin && (
+              <div className="mb-6">
+                <label
+                  className={`block text-sm font-bold mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 bottom-3 flex items-center pl-3">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </span>
+                  <input
+                    className={`appearance-none border ${
+                      isDark
+                        ? "bg-gray-700 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-700"
+                    } rounded w-full py-2 px-3 pl-10 mb-3 leading-tight focus:outline-none focus:shadow-outline`}
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-xs italic mt-1">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Submit button and error message */}
+            <div className="flex flex-col gap-3">
+              {errors.submit && (
+                <p className="text-red-500 text-sm text-center">
+                  {errors.submit}
+                </p>
+              )}
               <button
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                 type="submit"
@@ -172,6 +309,7 @@ const AuthComponent = ({ isLogin = true }) => {
               </button>
             </div>
           </form>
+          
           {/* Social Login Section */}
           <div className="mt-6">
             <div className="relative">

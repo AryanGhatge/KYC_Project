@@ -23,6 +23,8 @@ import { IoAddCircleOutline } from "react-icons/io5";
 import { FaFile, FaFilePdf, FaTrashAlt } from "react-icons/fa";
 import { bankDetailSchema } from "@/lib/schemas/e-kyc/bankDetailSchema";
 import { useDropzone } from "react-dropzone";
+import { bankService } from "@/lib/apiService/bankService";
+import { showToast } from "@/lib/showToast";
 
 const bankDetailsArraySchema = z.object({
   bankDetails: z.array(bankDetailSchema),
@@ -30,6 +32,7 @@ const bankDetailsArraySchema = z.object({
 
 const BankDetailsForm = ({ onSubmit, initialData }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(bankDetailsArraySchema),
     defaultValues: initialData || {
@@ -68,18 +71,20 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
   }, [initialData, form]);
 
   // TODO: Image link should be set in localStorage but null is getting set
-  const handleSubmit = (data) => {
-    const submissionData = {
-      ...data,
-      bankDetails: data.bankDetails.map((detail) => ({
-        ...detail,
-        uploadCancelledCheque: detail.uploadCancelledCheque
-          ? detail.uploadCancelledCheque.name
-          : null,
-      })),
-    };
-    onSubmit(submissionData, 4);
-    // onSubmit(data, 4);
+  const handleSubmit = async (data) => {
+    try {
+      const response = await bankService.registerBank(data);
+      console.log("Bank details registered:", response);
+      showToast.success("Details submitted successfully!");
+      onSubmit(data, 4);
+    } catch (error) {
+      console.error("Error registering bank details:", error);
+      showToast.error(
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddBankAccount = () => {
@@ -351,8 +356,8 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
               >
                 Back
               </Button>
-              <Button type="submit" variant="default">
-                Next
+              <Button type="submit" variant="default" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Next"}
               </Button>
             </div>
           </form>
