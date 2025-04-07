@@ -1,16 +1,15 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("./config/passport");
 const MongoStore = require("connect-mongo");
 const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const updateUserRoute = require("./routes/updateUser.routes");
-// const panRoutes = require("./routes/pan.routes");
-// const addressRoutes = require("./routes/address.routes");
-// const bankRoutes = require("./routes/bank.routes");
-// const dematRoutes = require("./routes/demat.routes");
-// const profileRoutes = require("./routes/profile.routes");
+const panRoutes = require("./routes/pan.routes");
+const addressRoutes = require("./routes/address.routes");
+const bankRoutes = require("./routes/bank.routes");
+const dematRoutes = require("./routes/demat.routes");
+const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
 require("dotenv").config();
 const db = require("./config/dbConnect");
@@ -25,10 +24,9 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser());
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -51,11 +49,11 @@ app.use(passport.session());
 // Routes
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
-// app.use("/v1/pan", isAuthenticated, panRoutes);
-// app.use("/v1/address", isAuthenticated, addressRoutes);
-// app.use("/v1/bank", isAuthenticated, bankRoutes);
-// app.use("/v1/demat", isAuthenticated, dematRoutes);
-// app.use("/v1/profile", isAuthenticated, profileRoutes);
+app.use("/v1/pan", isAuthenticated, panRoutes);
+app.use("/v1/address", isAuthenticated, addressRoutes);
+app.use("/v1/bank", isAuthenticated, bankRoutes);
+app.use("/v1/demat", isAuthenticated, dematRoutes);
+app.use("/v1/profile", isAuthenticated, profileRoutes);
 
 // Protected Route Example (for checking user is authorized)
 app.get("/protected", isAuthenticated, (req, res) => {
