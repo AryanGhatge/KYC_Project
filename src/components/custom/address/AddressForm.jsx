@@ -51,10 +51,11 @@ const AddressForm = ({ onSubmit, initialData }) => {
   }, [initialData, formMethods]);
 
   const handleSubmitForm = async (data) => {
+    setIsSubmitting(true);
     try {
       const response = await addressService.registerAddress(data);
       console.log("Address details submitted successfully:", response);
-      showToast.success("Details submitted successfully!");
+      // showToast.success("Details submitted successfully!");
       onSubmit(data, 2);
     } catch (error) {
       console.error("Error submitting address details:", error);

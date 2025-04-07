@@ -39,7 +39,7 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
       bankDetails: [
         {
           bankName: "",
-          accountType: "Savings",
+          accountType: "",
           bankAccountNumber: "",
           ifscCode: "",
           primary: true,
@@ -90,7 +90,7 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
   const handleAddBankAccount = () => {
     append({
       bankName: "",
-      accountType: "Savings",
+      accountType: "",
       bankAccountNumber: "",
       ifscCode: "",
       primary: false,
