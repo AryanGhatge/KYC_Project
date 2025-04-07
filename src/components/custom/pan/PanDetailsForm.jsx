@@ -30,10 +30,10 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
     resolver: zodResolver(panDetailsSchema),
     defaultValues: initialData || {
       panNumber: "",
-      mobileNumber: "",
+      mobileNo: "",
       dateOfBirth: new Date(),
-      emailId: "",
-      whoAreU: "Individual",
+      email: "",
+      iAm: "Individual",
     },
   });
 
@@ -100,7 +100,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
                 <div className="flex-1">
                   <FormField
                     control={formMethods.control}
-                    name="mobileNumber"
+                    name="mobileNo"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Mobile Number *</FormLabel>
@@ -143,7 +143,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
                 <div className="flex-1">
                   <FormField
                     control={formMethods.control}
-                    name="emailId"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email ID *</FormLabel>
@@ -166,7 +166,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
               <div>
                 <FormField
                   control={formMethods.control}
-                  name="whoAreU"
+                  name="iAm"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>I am a *</FormLabel>
