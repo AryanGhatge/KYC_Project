@@ -103,7 +103,9 @@ PUT /data/update_data
 {
   "panDetails": {
     "panNumber": "ABCDE1234F",
-    "dateOfBirth": "1995-05-12",
+    "mobileNo": "9876543210",
+    "dateOfBirth": "1995-08-15",
+    "email": "user@example.com",
     "iAm": "Individual"
   },
   "profileDetails": {
@@ -115,13 +117,38 @@ PUT /data/update_data
     "informationConfirmation": true
   },
   "addressDetails": {
-    "permanentAddress": "123 Street Name, Area, City",
-    "landmark": "Near XYZ Mall",
-    "permanentCity": "Mumbai",
-    "permanentPincode": "400001",
+    "permanentAddress": "123, MG Road, Pune",
+    "landmark": "Near City Mall",
+    "permanentCity": "Pune",
+    "permanentPincode": "411001",
     "permanentState": "Maharashtra",
     "permanentCountry": "India"
-  }
+  },
+  "bankDetails": [
+    {
+      "bankName": "HDFC Bank",
+      "accountType": "Saving",
+      "bankAccountNumber": 123456789012,
+      "ifscCode": "HDFC0001234",
+      "primary": true
+    },
+    {
+      "bankName": "SBI Bank",
+      "accountType": "Current",
+      "bankAccountNumber": 987654321098,
+      "ifscCode": "SBIN0005678",
+      "primary": false
+    }
+  ],
+  "dematDetails": [
+    {
+      "depository": "NSDL",
+      "dpID": "1234567890123456",
+      "clientID": "6543210987654321",
+      "primary": true,
+      "clientMasterCopy": "BASE64_ENCODED_FILE_HERE"
+    }
+  ]
 }
 ```
 
@@ -129,17 +156,70 @@ PUT /data/update_data
 
 ```json
 {
-  "message": "User data updated successfully",
+  "success": true,
+  "message": "Profile updated successfully",
   "data": {
     "panDetails": {
-      /* Updated PAN details */
+      "panNumber": "ABCDE1234F",
+      "dateOfBirth": "1995-08-15T00:00:00.000Z",
+      "iAm": "Individual"
     },
     "profileDetails": {
-      /* Updated Profile details */
+      "gender": "Male",
+      "placeOfBirth": "Pune",
+      "occupation": "Software Engineer",
+      "annualIncome": 500000,
+      "citizenship": true,
+      "informationConfirmation": true
     },
     "addressDetails": {
-      /* Updated Address details */
-    }
+      "permanentAddress": "123, MG Road, Pune",
+      "landmark": "Near City Mall",
+      "permanentCity": "Pune",
+      "permanentPincode": "411001",
+      "permanentState": "Maharashtra",
+      "permanentCountry": "India"
+    },
+    "_id": "67f4a509e1adf48dc00131e0",
+    "name": "mahi",
+    "email": "mahi@gmail.com",
+    "mobileNo": "1234567890",
+    "password": "$2b$10$G8GCbGVX1/zZiRmzkFGuwOHo6nbQqyoHLoRdI/HJvl8Q6H6Karj42",
+    "bankDetails": [
+      {
+        "bankName": "HDFC Bank",
+        "accountType": "Saving",
+        "bankAccountNumber": "123456789012",
+        "ifscCode": "HDFC0001234",
+        "primary": true,
+        "_id": "67f4a6250b2dc86fadb62213"
+      },
+      {
+        "bankName": "SBI Bank",
+        "accountType": "Current",
+        "bankAccountNumber": "987654321098",
+        "ifscCode": "SBIN0005678",
+        "primary": false,
+        "_id": "67f4a6250b2dc86fadb62214"
+      }
+    ],
+    "dematDetails": [
+      {
+        "depository": "NSDL",
+        "dpID": "1234567890123456",
+        "clientID": "6543210987654321",
+        "primary": true,
+        "clientMasterCopy": {
+          "type": "Buffer",
+          "data": [
+            66, 65, 83, 69, 54, 52, 95, 69, 78, 67, 79, 68, 69, 68, 95, 70, 73,
+            76, 69, 95, 72, 69, 82, 69
+          ]
+        },
+        "_id": "67f4a6250b2dc86fadb62212"
+      }
+    ],
+    "__v": 0
   }
 }
 ```
