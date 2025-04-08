@@ -64,8 +64,8 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
 
   const handleSubmit = async (data) => {
     try {
-      const response = await profileService.createProfile(data);
-      console.log("Profile details submitted successfully:", response);
+      // const response = await profileService.createProfile(data);
+      console.log("Profile details submitted successfully:", data);
       showToast.success("Details submitted successfully!");
       onSubmit(data, 3);
     } catch (error) {
