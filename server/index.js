@@ -5,17 +5,16 @@ const MongoStore = require("connect-mongo");
 const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const updateUserRoute = require("./routes/updateUser.routes");
-const panRoutes = require("./routes/pan.routes");
-const addressRoutes = require("./routes/address.routes");
-const bankRoutes = require("./routes/bank.routes");
-const dematRoutes = require("./routes/demat.routes");
-const profileRoutes = require("./routes/profile.routes");
+// const panRoutes = require("./routes/pan.routes");
+// const addressRoutes = require("./routes/address.routes");
+// const bankRoutes = require("./routes/bank.routes");
+// const dematRoutes = require("./routes/demat.routes");
+// const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
 require("dotenv").config();
 const db = require("./config/dbConnect");
 
 const cookieParser = require("cookie-parser");
-
 
 const app = express();
 app.use(cookieParser());
@@ -50,14 +49,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
-app.use("/v1/pan", isAuthenticated, panRoutes);
-app.use("/v1/address", isAuthenticated, addressRoutes);
-app.use("/v1/bank", isAuthenticated, bankRoutes);
-app.use("/v1/demat", isAuthenticated, dematRoutes);
-app.use("/v1/profile", isAuthenticated, profileRoutes);
+// app.use("/v1/pan", isAuthenticated, panRoutes);
+// app.use("/v1/address", isAuthenticated, addressRoutes);
+// app.use("/v1/bank", isAuthenticated, bankRoutes);
+// app.use("/v1/demat", isAuthenticated, dematRoutes);
+// app.use("/v1/profile", isAuthenticated, profileRoutes);
 
 // Protected Route Example (for checking user is authorized)
-app.get("/protected", isAuthenticated, (req, res) => {
+app.get("/v1/protected", isAuthenticated, (req, res) => {
   res.json({ message: "You are authorized!", user: req.user });
 });
 
