@@ -30,10 +30,10 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
     resolver: zodResolver(panDetailsSchema),
     defaultValues: initialData || {
       panNumber: "",
-      mobileNo: "",
+      mobileNumber: "",
       dateOfBirth: new Date(),
-      email: "",
-      iAm: "Individual",
+      emailId: "",
+      whoAreU: "Individual",
     },
   });
 
@@ -47,8 +47,8 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
 
   const handleSubmitForm = async (data) => {
     try {
-      const response = await panService.registerPan(data);
-      console.log("PAN details submitted successfully:", response);
+      // const response = await panService.registerPan(data);
+      console.log("PAN details submitted successfully:", data);
       showToast.success("Details submitted successfully!");
       onSubmit(data, 1);
     } catch (error) {
@@ -100,7 +100,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
                 <div className="flex-1">
                   <FormField
                     control={formMethods.control}
-                    name="mobileNo"
+                    name="mobileNumber"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Mobile Number *</FormLabel>
@@ -143,7 +143,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
                 <div className="flex-1">
                   <FormField
                     control={formMethods.control}
-                    name="email"
+                    name="emailId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email ID *</FormLabel>
@@ -166,7 +166,7 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
               <div>
                 <FormField
                   control={formMethods.control}
-                  name="iAm"
+                  name="whoAreU"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>I am a *</FormLabel>

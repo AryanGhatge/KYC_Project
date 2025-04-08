@@ -62,8 +62,8 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
 
   const handleSubmit = async (data) => {
     try {
-      const response = await dematService.registerDemat(data);
-      console.log("Demat account registered:", response);
+      // const response = await dematService.registerDemat(data);
+      console.log("Demat account registered:", data);
       showToast.success("Details submitted successfully!");
       onSubmit(data, 5); // Move to next step
     } catch (error) {
@@ -110,25 +110,25 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
       );
     }
 
-    if (file.type.startsWith("image/")) {
-      return (
-        <img
-          src={URL.createObjectURL(file)}
-          alt="Preview"
-          className="max-w-full h-auto max-h-40 mt-2"
-        />
-      );
-    } else if (file.type === "application/pdf") {
-      return (
-        <Button
-          onClick={() => window.open(URL.createObjectURL(file), "_blank")}
-          className="flex items-center"
-        >
-          <FaFilePdf className="mr-2" />
-          View PDF
-        </Button>
-      );
-    }
+    // if (file.type.startsWith("image/")) {
+    //   return (
+    //     <img
+    //       src={URL.createObjectURL(file)}
+    //       alt="Preview"
+    //       className="max-w-full h-auto max-h-40 mt-2"
+    //     />
+    //   );
+    // } else if (file.type === "application/pdf") {
+    //   return (
+    //     <Button
+    //       onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+    //       className="flex items-center"
+    //     >
+    //       <FaFilePdf className="mr-2" />
+    //       View PDF
+    //     </Button>
+    //   );
+    // }
     return null;
   };
 

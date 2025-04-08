@@ -30,29 +30,44 @@ const bankDetailsArraySchema = z.object({
   bankDetails: z.array(bankDetailSchema),
 });
 
+// Default empty bank detail entry
+const emptyBankDetail = {
+  bankName: "",
+  accountType: "",
+  bankAccountNumber: "",
+  ifscCode: "",
+  primary: true,
+  uploadCancelledCheque: null,
+};
+
 const BankDetailsForm = ({ onSubmit, initialData }) => {
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Ensure we initialize with at least one empty bank detail form
+  const defaultValues = {
+    bankDetails: initialData?.bankDetails?.length > 0 
+      ? initialData.bankDetails 
+      : [emptyBankDetail]
+  };
+
   const form = useForm({
     resolver: zodResolver(bankDetailsArraySchema),
-    defaultValues: initialData || {
-      bankDetails: [
-        {
-          bankName: "",
-          accountType: "",
-          bankAccountNumber: "",
-          ifscCode: "",
-          primary: true,
-          uploadCancelledCheque: null,
-        },
-      ],
-    },
+    defaultValues: defaultValues,
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "bankDetails",
   });
+
+  // Reset form when initialData changes
+  useEffect(() => {
+    if (initialData && initialData.bankDetails && initialData.bankDetails.length > 0) {
+      form.reset(initialData);
+    } else {
+      form.reset({ bankDetails: [emptyBankDetail] });
+    }
+  }, [initialData, form]);
 
   const handlePrimaryChange = (index) => {
     const updatedFields = fields.map((field, i) => ({
@@ -64,17 +79,11 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
     });
   };
 
-  useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    }
-  }, [initialData, form]);
-
-  // TODO: Image link should be set in localStorage but null is getting set
   const handleSubmit = async (data) => {
+    setIsSubmitting(true);
     try {
-      const response = await bankService.registerBank(data);
-      console.log("Bank details registered:", response);
+      // const response = await bankService.registerBank(data);
+      console.log("Bank details registered:", data);
       showToast.success("Details submitted successfully!");
       onSubmit(data, 4);
     } catch (error) {
@@ -89,26 +98,10 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
 
   const handleAddBankAccount = () => {
     append({
-      bankName: "",
-      accountType: "",
-      bankAccountNumber: "",
-      ifscCode: "",
-      primary: false,
-      uploadCancelledCheque: null,
+      ...emptyBankDetail,
+      primary: false, // Only the first bank account is primary by default
     });
   };
-
-  // Drag and drop logic for cheque upload
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "image/*": [],
-      "application/pdf": [],
-    },
-    maxSize: 5 * 1024 * 1024, // 5 MB max size
-    onDrop: (acceptedFiles) => {
-      setUploadedFiles(acceptedFiles);
-    },
-  });
 
   const renderFilePreview = (file) => {
     if (!file) return null;
@@ -144,6 +137,13 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
     }
     return null;
   };
+
+  // Ensure we have at least one form field
+  useEffect(() => {
+    if (fields.length === 0) {
+      append(emptyBankDetail);
+    }
+  }, [fields, append]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-12">
@@ -189,7 +189,7 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Savings">Savings</SelectItem>
+                            <SelectItem value="Saving">Saving</SelectItem>
                             <SelectItem value="Current">Current</SelectItem>
                           </SelectContent>
                         </Select>

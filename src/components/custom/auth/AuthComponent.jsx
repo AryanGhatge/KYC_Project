@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import Link from "next/link";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -131,6 +132,7 @@ const AuthComponent = ({ isLogin = true }) => {
           </h2>
           <form onSubmit={handleSubmit}>
             {!isLogin && (
+              <div>
               <div className="mb-4">
                 <label
                   className={`block ${
@@ -161,10 +163,7 @@ const AuthComponent = ({ isLogin = true }) => {
                   />
                 </div>
               </div>
-            )}
-
-            {/* Mobile Number Field */}
-            <div className="mb-4">
+              <div className="mb-4">
               <label
                 className={`block ${
                   isDark ? "text-gray-300" : "text-gray-700"
@@ -199,6 +198,11 @@ const AuthComponent = ({ isLogin = true }) => {
                 </p>
               )}
             </div>
+            
+              </div>
+            )}
+
+            
 
             {/* Email Input */}
             <div className="mb-4">
@@ -374,16 +378,16 @@ const AuthComponent = ({ isLogin = true }) => {
           </div>
           <p className="text-center mt-8">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-            <a
+            <Link
               href="#"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
-                isLogin ? router.push("/signin") : router.push("/signup");
+                isLogin ? router.push("/signup") : router.push("/signin");
               }}
             >
               {isLogin ? "Sign up" : "Log in"}
-            </a>
+            </Link>
           </p>
         </div>
       </motion.div>
