@@ -11,6 +11,8 @@ import BankDetailsForm from "@/components/custom/bank/BankDetailsForm";
 import DematForm from "@/components/custom/demat/DematForm";
 import InPersonVerificationForm from "@/components/custom/verification/InPersonVerificationForm";
 import ESignForm from "@/components/custom/esign/ESignForm";
+import dataService from "@/lib/apiService/dataService";
+import { transformDataForAPI } from "@/lib/transformDataForApi";
 
 const steps = [
   { id: 1, label: "Pan Details", description: "Enter your Pan Card details" },
@@ -48,15 +50,43 @@ const FormSteps = () => {
     }
   }, []);
 
+  const sendDataToServer = async (formData) => {
+    try {
+      const response = await dataService.updateData(formData);
+      return response;
+    } catch (error) {
+      console.error('Error sending data:', error);
+      throw error;
+    }
+  };
+
   const handleStepChange = (newStep) => {
     dispatch(setStep(newStep));
   };
 
-  const handleFormSubmit = (stepData, currentStep) => {
+  const handleFormSubmit = async (stepData, currentStep) => {
     const updatedFormData = { ...formData, [currentStep]: stepData };
     setFormData(updatedFormData);
     localStorage.setItem("ekycFormData", JSON.stringify(updatedFormData));
-    handleStepChange(currentStep + 1);
+
+    // If step 5 (Demat Details) is completed, send all data to server
+    if (currentStep === 5) {
+      try {
+        // Transform data to API format
+        const apiRequestData = transformDataForAPI(updatedFormData);
+      
+        // Output the transformed data
+        // console.log("Converted Data for API - ", JSON.stringify(apiRequestData, null, 2));
+        await sendDataToServer(apiRequestData);
+        // If successful, proceed to next step
+        handleStepChange(currentStep + 1);
+      } catch (error) {
+        // Handle error - you might want to show an error message to the user
+        console.error('Failed to submit data:', error);
+      }
+    } else {
+      handleStepChange(currentStep + 1);
+    }
   };
 
   const renderStepContent = () => {
