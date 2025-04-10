@@ -228,3 +228,6 @@ PUT /data/update_data
 MONGO_URI =
 PORT = 8081
 SESSION_SECRET = KYC_SECRET
+
+CF_CLIENT_ID=your_cashfree_client_id
+CF_CLIENT_SECRET=your_cashfree_client_secret
