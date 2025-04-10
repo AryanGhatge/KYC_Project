@@ -214,6 +214,7 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
                             onSuccess={(result) =>
                               handleUploadSuccess(result, index)
                             }
+                            inPerson={false}
                           />
                         </FormControl>
                         {uploadedUrls[index] && (
