@@ -179,9 +179,6 @@ const userSchemaUpdated = new mongoose.Schema({
         type: Boolean,
         //required: [true, "Primary flag is required"],
       },
-      uploadCanceledCheque: {
-        type: String,
-      }
     },
   ],
 
@@ -209,7 +206,13 @@ const userSchemaUpdated = new mongoose.Schema({
         //required: true,
       },
       clientMasterCopy: {
-        type: String,
+        type: Buffer,
+        validate: {
+          validator: function (v) {
+            return !v || v.length <= 5 * 1024 * 1024;
+          },
+          message: "File size must be less than 5 MB",
+        },
       },
     },
   ],

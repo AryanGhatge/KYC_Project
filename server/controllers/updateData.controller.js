@@ -1,5 +1,4 @@
 const User = require("../models/updated_user.model");
-const { uploadImage } = require("./imageUploadController");
 
 exports.updateUserProfile = async (req, res) => {
   try {
@@ -12,16 +11,9 @@ exports.updateUserProfile = async (req, res) => {
     const userId = req.user._id; // Extract user ID from session
     const updateData = req.body;
 
-    const image1 = await uploadImage(req.files.bank);
-    const image2 = await uploadImage(req.files.dmat);
-
     // Exclude sensitive fields from updates
     delete updateData.email;
     delete updateData.password;
-
-    //updating images
-    updateData.uploadCanceledCheque = image1;
-    updateData.clientMasterCopy = image2;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
