@@ -1,15 +1,25 @@
+"use client"
+
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import eKYCImage from "@/../public/Online_test.png";
 import { Button } from "@mantine/core";
 import Navbar from "./Navbar";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 const HomePage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const router = useRouter();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/signin');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div
@@ -40,7 +50,7 @@ const HomePage = () => {
                       isDark ? "text-gray-300" : "text-gray-900"
                     } transition-colors duration-300`}
                   >
-                    Ayush!!!
+                    {user?.name || "User"}!!!
                   </h1>
                 </div>
 
