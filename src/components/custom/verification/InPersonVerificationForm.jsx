@@ -162,6 +162,7 @@ const InPersonVerificationForm= ({
                       <UploadImages
                         text="Upload In-Person Verification Photo"
                         onSuccess={handleUploadSuccess}
+                        inPerson={true}
                       />
                     </FormControl>
                     <FormMessage>
