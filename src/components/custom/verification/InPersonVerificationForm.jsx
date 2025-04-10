@@ -9,16 +9,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import InPersonPhoto from "@/../public/inpersonphoto.png";
 import { FaLocationDot, FaCheck } from "react-icons/fa6";
-
-const InPersonVerificationForm = ({ onSubmit, initialData }) => {
+import UploadImages from "../UploadImages";
+const InPersonVerificationForm= ({
+  onSubmit,
+  initialData,
+}) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
 
   const formMethods = useForm({
     defaultValues: {
@@ -39,9 +40,8 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
   useEffect(() => {
     if (initialData) {
       if (initialData.image) {
-        setImage(initialData.image);
+        setUploadedImageUrl(initialData.image);
         setValue("image", initialData.image);
-        setPreviewUrl(URL.createObjectURL(initialData.image));
       }
       if (initialData.location) {
         setLocation(initialData.location);
@@ -49,34 +49,14 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
         setLocationAllowed(true);
       }
     }
-  }, [initialData, setValue]);
 
-  const onDrop = (acceptedFiles) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      if (file.size > MAX_FILE_SIZE) {
-        setError("image", {
-          type: "manual",
-          message: "File size must be less than 5 MB.",
-        });
-      } else {
-        clearErrors("image");
-        setImage(file);
-        setValue("image", file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        console.log("Preview URL:", url); // Check the URL here
-      }
+    // Load image URL from localStorage if available
+    const storedImageUrl = localStorage.getItem("inPersonVerificationImageUrl");
+    if (storedImageUrl) {
+      setUploadedImageUrl(storedImageUrl);
+      setValue("image", storedImageUrl);
     }
-  };
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-    },
-  });
+  }, [initialData, setValue]);
 
   const handleLocationAccess = () => {
     navigator.geolocation.getCurrentPosition(
@@ -93,11 +73,28 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
     );
   };
 
+  const handleUploadSuccess = (result) => {
+    const secureUrl = result.info.secure_url;
+    setUploadedImageUrl(secureUrl);
+    setValue("image", secureUrl);
+
+    // Store the uploaded URL in localStorage
+    localStorage.setItem("inPersonVerificationImageUrl", secureUrl);
+  };
+
   const handleFormSubmit = (data) => {
     if (!locationAllowed) {
       setError("location", {
         type: "manual",
         message: "Please allow location access.",
+      });
+      return;
+    }
+
+    if (!data.image) {
+      setError("image", {
+        type: "manual",
+        message: "Please upload an image.",
       });
       return;
     }
@@ -162,17 +159,10 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
                       Upload Image
                     </FormLabel>
                     <FormControl>
-                      <div
-                        {...getRootProps({ className: "dropzone" })}
-                        className="border-2 border-dashed border-gray-300 p-8 rounded-lg text-center cursor-pointer hover:border-indigo-600 transition"
-                      >
-                        <input {...getInputProps()} />
-                        <p className="text-gray-500">
-                          {image
-                            ? `File selected: ${image.name}`
-                            : "Drag & drop your image here, or click to select file"}
-                        </p>
-                      </div>
+                      <UploadImages
+                        text="Upload In-Person Verification Photo"
+                        onSuccess={handleUploadSuccess}
+                      />
                     </FormControl>
                     <FormMessage>
                       {errors.image && (
@@ -186,16 +176,16 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
               />
             </div>
 
-            {previewUrl && (
+            {uploadedImageUrl && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-2">Image Preview:</h3>
                 <div className="flex justify-center">
                   <Image
-                    src={previewUrl}
+                    src={uploadedImageUrl}
                     alt="Uploaded Image Preview"
                     width={300}
                     height={300}
-                    objectFit="contain"
+                    style={{ width: "100%", height: "auto" }}
                     className="rounded-lg"
                   />
                 </div>

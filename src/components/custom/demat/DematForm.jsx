@@ -19,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IoAddCircleOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoConstructOutline } from "react-icons/io5";
 import { FaFilePdf, FaTrashAlt, FaFile } from "react-icons/fa";
 import { dematSchema } from "@/lib/schemas/e-kyc/dematSchema";
 import { useDropzone } from "react-dropzone";
-import { dematService } from "@/lib/apiService/dematService";
-import { showToast } from "@/lib/showToast";
+import Image from "next/image";
+import UploadImages from "../UploadImages";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -32,8 +32,9 @@ const dematDetailsArraySchema = z.object({
   dematDetails: z.array(dematSchema),
 });
 
-const DematAccountForm = ({ onSubmit, initialData }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const DematAccountForm= ({ onSubmit, initialData }) => {
+  const [uploadedUrls, setUploadedUrls] = useState([]);
+
   const form = useForm({
     resolver: zodResolver(dematDetailsArraySchema),
     defaultValues: initialData || {
@@ -60,20 +61,22 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
     }
   }, [initialData, form]);
 
-  const handleSubmit = async (data) => {
-    try {
-      // const response = await dematService.registerDemat(data);
-      console.log("Demat account registered:", data);
-      showToast.success("Details submitted successfully!");
-      onSubmit(data, 5); // Move to next step
-    } catch (error) {
-      console.error("Error registering demat account:", error);
-      showToast.error(
-        error.message || "Something went wrong. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = (data) => {
+    const submissionData = {
+      ...data,
+      dematDetails: data.dematDetails.map((detail, index) => ({
+        ...detail,
+        clientMasterCopy: uploadedUrls[index] || null,
+      })),
+    };
+
+    // Store the uploaded URLs in localStorage
+    localStorage.setItem(
+      "dematDetailUploadedUrls",
+      JSON.stringify(uploadedUrls)
+    );
+
+    onSubmit(submissionData, 5);
   };
 
   const handleAddDematAccount = () => {
@@ -97,39 +100,15 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
   };
 
   // TODO: Image link should be set in localStorage but null is getting set
-  const renderFilePreview = (file) => {
-    if (!file) return null;
-
-    if (typeof file === "string") {
-      // If file is a string (filename), render a generic file icon
-      return (
-        <div className="flex items-center">
-          <FaFile className="mr-2" />
-          <span>{file}</span>
-        </div>
-      );
-    }
-
-    // if (file.type.startsWith("image/")) {
-    //   return (
-    //     <img
-    //       src={URL.createObjectURL(file)}
-    //       alt="Preview"
-    //       className="max-w-full h-auto max-h-40 mt-2"
-    //     />
-    //   );
-    // } else if (file.type === "application/pdf") {
-    //   return (
-    //     <Button
-    //       onClick={() => window.open(URL.createObjectURL(file), "_blank")}
-    //       className="flex items-center"
-    //     >
-    //       <FaFilePdf className="mr-2" />
-    //       View PDF
-    //     </Button>
-    //   );
-    // }
-    return null;
+  const handleUploadSuccess = (result, index) => {
+    const secureUrl = result.info.secure_url;
+    console.log("Demat image - ", result.info);
+    setUploadedUrls((prevUrls) => {
+      const newUrls = [...prevUrls];
+      newUrls[index] = secureUrl;
+      return newUrls;
+    });
+    form.setValue(`dematDetails.${index}.clientMasterCopy`, secureUrl);
   };
 
   return (
@@ -200,65 +179,42 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
                     </FormItem>
                   )}
                 />
+
                 <div className="mt-4">
                   <FormField
                     control={form.control}
                     name={`dematDetails.${index}.clientMasterCopy`}
-                    render={({ field: { onChange, value } }) => {
-                      const { getRootProps, getInputProps, isDragActive } =
-                        useDropzone({
-                          accept: {
-                            "image/*": [],
-                            "application/pdf": [],
-                          },
-                          maxSize: MAX_FILE_SIZE,
-                          onDrop: (acceptedFiles) => {
-                            onChange(acceptedFiles[0]);
-                          },
-                        });
-
-                      return (
-                        <FormItem>
-                          <FormLabel>Upload Client Master Copy</FormLabel>
-                          <FormControl>
-                            <div
-                              {...getRootProps()}
-                              className={`border-2 border-dashed rounded-lg p-4 cursor-pointer ${
-                                isDragActive
-                                  ? "border-blue-500"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              <input {...getInputProps()} />
-                              {value ? (
-                                <div className="flex justify-between">
-                                  <p className="text-sm">
-                                    {typeof value === "string"
-                                      ? value
-                                      : value.name}
-                                    {typeof value !== "string" && (
-                                      <p className="text-xs text-gray-500">
-                                        {(value.size / 1024 / 1024).toFixed(2)}{" "}
-                                        MB
-                                      </p>
-                                    )}
-                                  </p>
-                                  {renderFilePreview(value)}
-                                </div>
-                              ) : (
-                                <p className="text-center text-gray-500">
-                                  Drag and drop to upload Client Master Copy
-                                  (Image/PDF)
-                                </p>
-                              )}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Master Copy</FormLabel>
+                        <FormControl>
+                          <UploadImages
+                            text={"Upload Client Master Copy"}
+                            onSuccess={(result) =>
+                              handleUploadSuccess(result, index)
+                            }
+                          />
+                        </FormControl>
+                        {uploadedUrls[index] && (
+                          <div className="mt-4">
+                            <Image
+                              src={uploadedUrls[index]}
+                              alt={`Uploaded cheque for account ${index + 1}`}
+                              width={300}
+                              height={200}
+                              style={{ width: "100%", height: "auto" }}
+                            />
+                            <p className="text-sm text-green-600 mt-2">
+                              Image uploaded successfully
+                            </p>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
+
                 <div className="flex items-center justify-between mt-4">
                   <FormField
                     control={form.control}
@@ -314,8 +270,8 @@ const DematAccountForm = ({ onSubmit, initialData }) => {
               >
                 Back
               </Button>
-              <Button type="submit" variant="default" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Next"}
+              <Button type="submit" variant="default">
+                Next
               </Button>
             </div>
           </form>

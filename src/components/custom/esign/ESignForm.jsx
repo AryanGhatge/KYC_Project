@@ -31,27 +31,22 @@ const ESignForm = ({ handleStepChange, step, steps }) => {
     };
   }, []);
 
-  const fetchFile = async (path) => {
+  const fetchFile = async (url) => {
     try {
-      // For local images, we need to handle them differently than external URLs
-      if (path.startsWith('http')) {
-        const response = await fetch(path);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status}`);
-        }
-        return await response.arrayBuffer();
-      } else {
-        // For relative paths or file names, we need to construct the URL properly
-        // This assumes the images are in the public folder
-        const fullPath = path.startsWith('/') ? path : `/${path}`;
-        const response = await fetch(fullPath);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status}`);
-        }
-        return await response.arrayBuffer();
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'image/*',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.status}`);
       }
+      
+      return await response.arrayBuffer();
     } catch (error) {
-      console.error(`Error fetching file: ${path}`, error);
+      console.error(`Error fetching file: ${url}`, error);
       return null;
     }
   };
@@ -250,61 +245,95 @@ const ESignForm = ({ handleStepChange, step, steps }) => {
   };
 
   // This function adds a document to the PDF with a title
-  const addDocumentWithTitle = async (pdfDoc, title, imagePath) => {
-    if (!imagePath) return;
+  const addDocumentWithTitle = async (pdfDoc, title, imageUrl) => {
+    if (!imageUrl) return;
     
     try {
-      const imageBytes = await fetchFile(imagePath);
-      if (!imageBytes) return;
+      const imageBytes = await fetchFile(imageUrl);
+      if (!imageBytes) {
+        throw new Error('Failed to fetch image');
+      }
       
+      // Create the page first
       const page = pdfDoc.addPage([595, 842]); // A4 size
       const { width: pageWidth, height: pageHeight } = page.getSize();
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       
-      // Add title to the page
+      // Add title
       page.drawText(title, {
         x: 50,
         y: pageHeight - 50,
         size: 16,
         font: font,
       });
+  
+      // Handle different image formats
+      let embeddedImage = null;
       
       try {
-        // Try as PNG first
-        const image = await pdfDoc.embedPng(imageBytes);
-        const dimensions = image.scale(0.7); // Scale to 70% to fit nicely
-        
-        page.drawImage(image, {
-          x: (pageWidth - dimensions.width) / 2,
-          y: pageHeight - 100 - dimensions.height,
-          width: dimensions.width,
-          height: dimensions.height,
-        });
+        // Try PNG first
+        embeddedImage = await pdfDoc.embedPng(imageBytes);
       } catch (pngError) {
         try {
-          // Try as JPEG if PNG fails
-          const image = await pdfDoc.embedJpg(imageBytes);
-          const dimensions = image.scale(0.7);
-          
-          page.drawImage(image, {
-            x: (pageWidth - dimensions.width) / 2,
-            y: pageHeight - 100 - dimensions.height,
-            width: dimensions.width,
-            height: dimensions.height,
-          });
+          // If PNG fails, try JPG
+          embeddedImage = await pdfDoc.embedJpg(imageBytes);
         } catch (jpgError) {
-          // If both fail, add error text
-          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-          page.drawText(`Could not load image: ${imagePath.split('/').pop()}`, {
-            x: 50,
-            y: pageHeight - 100,
-            size: 12,
-            font: regularFont,
-          });
+          console.error('Failed to embed image as PNG or JPG:', pngError, jpgError);
+          throw new Error('Unsupported image format');
         }
+      }
+  
+      if (embeddedImage) {
+        // Calculate dimensions to fit within page
+        const maxWidth = pageWidth - 100; // 50px margin on each side
+        const maxHeight = pageHeight - 200; // Space for title and margins
+        
+        const imgWidth = embeddedImage.width;
+        const imgHeight = embeddedImage.height;
+        
+        // Calculate scale to fit within bounds
+        const scale = Math.min(
+          maxWidth / imgWidth,
+          maxHeight / imgHeight,
+          1 // Don't enlarge images
+        );
+        
+        const finalWidth = imgWidth * scale;
+        const finalHeight = imgHeight * scale;
+        
+        // Center the image
+        const x = (pageWidth - finalWidth) / 2;
+        const y = pageHeight - 100 - finalHeight; // 100px from top for title
+        
+        page.drawImage(embeddedImage, {
+          x,
+          y,
+          width: finalWidth,
+          height: finalHeight,
+        });
       }
     } catch (error) {
       console.error(`Error adding document with title ${title}:`, error);
+      
+      // Create an error page
+      const page = pdfDoc.addPage([595, 842]);
+      const { height: pageHeight } = page.getSize();
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      
+      page.drawText(title, {
+        x: 50,
+        y: pageHeight - 50,
+        size: 16,
+        font: regularFont,
+      });
+      
+      page.drawText(`Error: Could not load image - ${error.message}`, {
+        x: 50,
+        y: pageHeight - 100,
+        size: 12,
+        font: regularFont,
+        color: rgb(1, 0, 0), // Red color for error
+      });
     }
   };
 
@@ -313,52 +342,62 @@ const ESignForm = ({ handleStepChange, step, steps }) => {
       setIsLoading(true);
       setError(null);
       
-      // Create a new PDF document
       const pdfDoc = await PDFDocument.create();
       
       // Generate the cover page with user data
       await generateCoverPage(pdfDoc, data);
-
-      // Add bank document if available
-      const bankDetails = data["4"]?.bankDetails?.find(bank => bank.primary);
-      if (bankDetails?.uploadCancelledCheque?.path) {
-        await addDocumentWithTitle(
-          pdfDoc, 
-          "Bank Account - Cancelled Cheque", 
-          bankDetails.uploadCancelledCheque.path
-        );
+  
+      // Add bank documents
+      if (data["4"]?.bankDetails) {
+        for (const bank of data["4"].bankDetails) {
+          if (bank.uploadCancelledCheque) {
+            await addDocumentWithTitle(
+              pdfDoc, 
+              `Bank Account - ${bank.bankName} Cancelled Cheque`, 
+              bank.uploadCancelledCheque
+            ).catch(error => {
+              console.error('Error adding bank document:', error);
+            });
+          }
+        }
       }
-
-      // Add demat document if available
-      const dematDetails = data["5"]?.dematDetails?.find(demat => demat.primary);
-      if (dematDetails?.clientMasterCopy?.path) {
-        await addDocumentWithTitle(
-          pdfDoc, 
-          "Demat Account - Client Master Copy", 
-          dematDetails.clientMasterCopy.path
-        );
+  
+      // Add demat documents
+      if (data["5"]?.dematDetails) {
+        for (const demat of data["5"].dematDetails) {
+          if (demat.clientMasterCopy) {
+            await addDocumentWithTitle(
+              pdfDoc, 
+              `Demat Account - ${demat.depository} Client Master Copy`, 
+              demat.clientMasterCopy
+            ).catch(error => {
+              console.error('Error adding demat document:', error);
+            });
+          }
+        }
       }
-
-      // Add user photo if available
-      if (data["6"]?.image?.path) {
+  
+      // Add user photo
+      if (data["6"]?.image) {
         await addDocumentWithTitle(
           pdfDoc, 
           "User Photo", 
-          data["6"].image.path
-        );
+          data["6"].image
+        ).catch(error => {
+          console.error('Error adding user photo:', error);
+        });
       }
-
-      // Save the PDF document
+  
       const pdfBytes = await pdfDoc.save();
       const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       
       setMergedPdfUrl(pdfUrl);
-      setIsLoading(false);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      setIsLoading(false);
       setError("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
