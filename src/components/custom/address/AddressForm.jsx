@@ -276,7 +276,7 @@ const AddressForm = ({ onSubmit, initialData }) => {
               <div className="flex justify-between mt-4">
                 <Button
                   type="button"
-                  onClick={() => onSubmit(formMethods.getValues(), 1)}
+                  onClick={() => {onSubmit(formMethods.getValues(), 0)}}
                   variant="secondary"
                 >
                   Back

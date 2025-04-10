@@ -266,7 +266,7 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
             <div className="flex justify-between mt-6">
               <Button
                 type="button"
-                onClick={() => onSubmit(form.getValues(), 2)}
+                onClick={() => {onSubmit(form.getValues(), 1)}}
                 variant="secondary"
               >
                 Back

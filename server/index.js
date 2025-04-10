@@ -5,6 +5,8 @@ const MongoStore = require("connect-mongo");
 const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const updateUserRoute = require("./routes/updateUser.routes");
+const {cloudinaryConnect} = require("./config/cloudinary");
+
 // const panRoutes = require("./routes/pan.routes");
 // const addressRoutes = require("./routes/address.routes");
 // const bankRoutes = require("./routes/bank.routes");
@@ -21,6 +23,7 @@ app.use(cookieParser());
 
 // Connect Database
 db.dbConnect();
+cloudinaryConnect();
 
 // Port
 const PORT = process.env.PORT || 8080;
