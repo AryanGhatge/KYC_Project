@@ -46,7 +46,7 @@ export default function RenderSteps() {
   return (
     <div>
       <Stepper
-        active={step - 1}
+        active={step}
         onStepClick={handleStepChange}
         allowNextStepsSelect={false}
       >

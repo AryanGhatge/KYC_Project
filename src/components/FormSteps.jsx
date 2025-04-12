@@ -41,12 +41,14 @@ const FormSteps = () => {
   // const step = 4;
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
+  const [currentStep, setCurrentStep] = useState(step);
 
   useEffect(() => {
     // Load all form data from localStorage on component mount
     const savedData = localStorage.getItem("ekycFormData");
     if (savedData) {
-      setFormData(JSON.parse(savedData));
+      const parsedData = JSON.parse(savedData);
+      setFormData(parsedData);
     }
   }, []);
 
@@ -55,12 +57,13 @@ const FormSteps = () => {
       const response = await dataService.updateData(formData);
       return response;
     } catch (error) {
-      console.error('Error sending data:', error);
+      console.error("Error sending data:", error);
       throw error;
     }
   };
 
   const handleStepChange = (newStep) => {
+    setCurrentStep(newStep);
     dispatch(setStep(newStep));
   };
 
@@ -74,7 +77,7 @@ const FormSteps = () => {
       try {
         // Transform data to API format
         const apiRequestData = transformDataForAPI(updatedFormData);
-      
+
         // Output the transformed data
         // console.log("Converted Data for API - ", JSON.stringify(apiRequestData, null, 2));
         await sendDataToServer(apiRequestData);
@@ -82,7 +85,7 @@ const FormSteps = () => {
         handleStepChange(currentStep + 1);
       } catch (error) {
         // Handle error - you might want to show an error message to the user
-        console.error('Failed to submit data:', error);
+        console.error("Failed to submit data:", error);
       }
     } else {
       handleStepChange(currentStep + 1);
@@ -96,17 +99,26 @@ const FormSteps = () => {
           <PanDetailsForm
             onSubmit={handleFormSubmit}
             initialData={formData[1]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
           />
         );
       case 2:
         return (
-          <AddressForm onSubmit={handleFormSubmit} initialData={formData[2]} />
+          <AddressForm
+            onSubmit={handleFormSubmit}
+            initialData={formData[2]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
+          />
         );
       case 3:
         return (
           <ProfileDetailsForm
             onSubmit={handleFormSubmit}
             initialData={formData[3]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
           />
         );
       case 4:
@@ -114,17 +126,26 @@ const FormSteps = () => {
           <BankDetailsForm
             onSubmit={handleFormSubmit}
             initialData={formData[4]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
           />
         );
       case 5:
         return (
-          <DematForm onSubmit={handleFormSubmit} initialData={formData[5]} />
+          <DematForm
+            onSubmit={handleFormSubmit}
+            initialData={formData[5]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
+          />
         );
       case 6:
         return (
           <InPersonVerificationForm
             onSubmit={handleFormSubmit}
             initialData={formData[6]}
+            step={currentStep}
+            handleStepChange={handleStepChange}
           />
         );
       case 7:
