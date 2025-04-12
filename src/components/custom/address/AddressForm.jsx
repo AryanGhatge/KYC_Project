@@ -74,7 +74,7 @@ const handleBack = () => {
 };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center lg:my-8 lg:min-h-[calc(100%-100px)]">
       <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg border-2 flex flex-col justify-between h-full">
         <div>
           <h2 className="text-2xl font-bold mb-6 text-center">

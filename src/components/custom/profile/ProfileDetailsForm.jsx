@@ -90,7 +90,7 @@ const ProfileDetailsForm = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center lg:min-h-[calc(100%-180px)] py-12">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
         <Form {...form}>

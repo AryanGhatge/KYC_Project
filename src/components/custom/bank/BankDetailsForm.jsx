@@ -53,19 +53,67 @@ const BankDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
     name: "bankDetails",
   });
 
-  useEffect(() => {
-    const savedUrls = localStorage.getItem("bankDetailUploadedUrls");
-    if (savedUrls) {
-      const parsedUrls = JSON.parse(savedUrls);
-      setUploadedUrls(parsedUrls);
-    }
+  // Update the useEffect that handles initial data loading
+useEffect(() => {
+  const savedUrls = localStorage.getItem("bankDetailUploadedUrls");
+  if (savedUrls) {
+    const parsedUrls = JSON.parse(savedUrls);
+    setUploadedUrls(parsedUrls);
+  }
 
-    // If initialData exists, set the uploaded URLs from it
-    if (initialData?.bankDetails) {
-      const urls = initialData.bankDetails.map(detail => detail.cancelledCheque);
-      setUploadedUrls(urls);
-    }
-  }, [initialData]);
+  // Fix: Use uploadCancelledCheque instead of cancelledCheque
+  if (initialData?.bankDetails) {
+    const urls = initialData.bankDetails.map(detail => detail.uploadCancelledCheque);
+    setUploadedUrls(urls.filter(url => url !== null));
+  }
+}, [initialData]);
+
+// Update handleBack function
+const handleBack = () => {
+  const currentFormData = {
+    bankDetails: form.getValues().bankDetails.map((detail, index) => ({
+      ...detail,
+      uploadCancelledCheque: uploadedUrls[index] || null, // Fix: Use uploadCancelledCheque
+    })),
+  };
+
+  const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
+  const updatedData = {
+    ...existingData,
+    [step]: currentFormData
+  };
+  localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
+  localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(uploadedUrls));
+
+  handleStepChange(step - 1);
+};
+
+// Update handleUploadSuccess function
+const handleUploadSuccess = (result, index) => {
+  const secureUrl = result.info.secure_url;
+  setUploadedUrls(prevUrls => {
+    const newUrls = [...prevUrls];
+    newUrls[index] = secureUrl;
+    localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(newUrls));
+    return newUrls;
+  });
+  // Fix: Use uploadCancelledCheque instead of cancelledCheque
+  form.setValue(`bankDetails.${index}.uploadCancelledCheque`, secureUrl);
+};
+
+// Update handleSubmit function
+const handleSubmit = (data) => {
+  const submissionData = {
+    ...data,
+    bankDetails: data.bankDetails.map((detail, index) => ({
+      ...detail,
+      uploadCancelledCheque: uploadedUrls[index] || null,
+    })),
+  };
+
+  localStorage.setItem("bankDetailUploadedUrls", JSON.stringify(uploadedUrls));
+  onSubmit(submissionData, 4);
+};
 
   const handlePrimaryChange = (index) => {
     const updatedFields = fields.map((field, i) => ({
@@ -83,24 +131,6 @@ const BankDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
     }
   }, [initialData, form]);
 
-  const handleSubmit = (data) => {
-    const submissionData = {
-      ...data,
-      bankDetails: data.bankDetails.map((detail, index) => ({
-        ...detail,
-        uploadCancelledCheque: uploadedUrls[index] || null,
-      })),
-    };
-
-    // Store the uploaded URLs in localStorage
-    localStorage.setItem(
-      "bankDetailsUploadedUrls",
-      JSON.stringify(uploadedUrls)
-    );
-
-    onSubmit(submissionData, 4);
-  };
-
   const handleAddBankAccount = () => {
     append({
       bankName: "",
@@ -112,43 +142,8 @@ const BankDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
     });
   };
 
-  const handleUploadSuccess = (result, index) => {
-    const secureUrl = result.info.secure_url;
-    setUploadedUrls(prevUrls => {
-      const newUrls = [...prevUrls];
-      newUrls[index] = secureUrl;
-      // Save to localStorage immediately after update
-      localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(newUrls));
-      return newUrls;
-    });
-    form.setValue(`bankDetails.${index}.cancelledCheque`, secureUrl);
-  };
-
-  const handleBack = () => {
-    // Save current form data before going back
-    const currentFormData = {
-      bankDetails: form.getValues().bankDetails.map((detail, index) => ({
-        ...detail,
-        cancelledCheque: uploadedUrls[index] || null,
-      })),
-    };
-
-    // Store in localStorage
-    const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
-    const updatedData = {
-      ...existingData,
-      [step]: currentFormData
-    };
-    localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
-
-    // Also save the uploaded URLs separately
-    localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(uploadedUrls));
-
-    handleStepChange(step - 1);
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center lg:my-8 lg:min-h-[calc(100%-100px)] py-5">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">Bank Details</h2>
         <Form {...form}>

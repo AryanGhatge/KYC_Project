@@ -119,7 +119,7 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen pt-14">
+    <div className="flex flex-col items-center justify-center lg:min-h-[calc(100%-100px)] py-10">
       <div className="w-full max-w-2xl p-8 bg-white rounded-lg shadow-lg border border-gray-200">
         <h2 className="text-3xl font-semibold mb-8 text-center text-gray-800">
           In-Person Verification

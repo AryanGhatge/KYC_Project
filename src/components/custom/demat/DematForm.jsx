@@ -152,7 +152,7 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center min-h-screen py-5">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">
           Demat Account Details
