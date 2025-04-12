@@ -13,6 +13,9 @@ import InPersonVerificationForm from "@/components/custom/verification/InPersonV
 import ESignForm from "@/components/custom/esign/ESignForm";
 import dataService from "@/lib/apiService/dataService";
 import { transformDataForAPI } from "@/lib/transformDataForApi";
+import { ArrowRight } from "lucide-react";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 const steps = [
   { id: 1, label: "Pan Details", description: "Enter your Pan Card details" },
@@ -39,6 +42,7 @@ const steps = [
 const FormSteps = () => {
   const { step } = useSelector((state) => state.form);
   // const step = 4;
+  const router = useRouter();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(step);
@@ -165,24 +169,37 @@ const FormSteps = () => {
   };
 
   return (
-    <div className="relative flex flex-col h-screen px-4 md:px-8 lg:px-16">
-      <div className="hidden lg:block">
-        <div className="max-w-screen mx-auto mt-10">
+    <div className="relative flex flex-col min-h-screen w-full px-4 md:px-8 lg:px-16">
+      <div className="hidden lg:block w-full h-full">
+        <div className="max-w-screen mx-auto mt-10 w-full h-full">
           <Stepper
-            active={step - 1}
-            onStepClick={handleStepChange}
-            allowNextStepsSelect={false}
-            size="sm"
-            classNames={{ step: "text-sm" }}
+           active={step - 1}
+          onStepClick={(clickedStep) => handleStepChange(clickedStep + 1)}
+          allowNextStepsSelect={false}
+          size="sm"
+          classNames={{
+            root: "w-full",
+            step: "text-sm",
+            content: "w-full"
+          }}
           >
             {steps.map((form) => (
               <Stepper.Step key={form.id} label={form.label}>
                 {step === form.id && renderStepContent()}
               </Stepper.Step>
             ))}
-            <Stepper.Completed>
-              Completed! Click back to go to previous steps.
-            </Stepper.Completed>
+            <Stepper.Completed className="">
+            <div className="flex flex-col w-full h-[600px] justify-center text-lg font-semibold text-gray-700 items-center space-y-4">
+              <p>Completed! Click back to go to previous steps.</p>
+              <Button 
+                onClick={() => router.push("/")}
+                className="flex items-center space-x-2"
+              >
+                <span>Go to Homepage</span>
+                <ArrowRight size={24}/>
+              </Button>
+            </div>
+          </Stepper.Completed>
           </Stepper>
         </div>
       </div>
