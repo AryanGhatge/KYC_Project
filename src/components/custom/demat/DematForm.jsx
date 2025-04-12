@@ -32,7 +32,7 @@ const dematDetailsArraySchema = z.object({
   dematDetails: z.array(dematSchema),
 });
 
-const DematAccountForm= ({ onSubmit, initialData }) => {
+const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
   const [uploadedUrls, setUploadedUrls] = useState([]);
 
   const form = useForm({
@@ -60,6 +60,21 @@ const DematAccountForm= ({ onSubmit, initialData }) => {
       form.reset(initialData);
     }
   }, [initialData, form]);
+
+  // Add this useEffect to load images from localStorage on component mount
+  useEffect(() => {
+    const savedUrls = localStorage.getItem("dematDetailUploadedUrls");
+    if (savedUrls) {
+      const parsedUrls = JSON.parse(savedUrls);
+      setUploadedUrls(parsedUrls);
+    }
+
+    // If initialData exists, set the uploaded URLs from it
+    if (initialData?.dematDetails) {
+      const urls = initialData.dematDetails.map(detail => detail.clientMasterCopy);
+      setUploadedUrls(urls);
+    }
+  }, [initialData]);
 
   const handleSubmit = (data) => {
     const submissionData = {
@@ -99,16 +114,41 @@ const DematAccountForm= ({ onSubmit, initialData }) => {
     });
   };
 
-  // TODO: Image link should be set in localStorage but null is getting set
+  // Modify the handleUploadSuccess function
   const handleUploadSuccess = (result, index) => {
     const secureUrl = result.info.secure_url;
-    console.log("Demat image - ", result.info);
-    setUploadedUrls((prevUrls) => {
+    setUploadedUrls(prevUrls => {
       const newUrls = [...prevUrls];
       newUrls[index] = secureUrl;
+      // Save to localStorage immediately after update
+      localStorage.setItem('dematDetailUploadedUrls', JSON.stringify(newUrls));
       return newUrls;
     });
     form.setValue(`dematDetails.${index}.clientMasterCopy`, secureUrl);
+  };
+
+  // Example for BankDetailsForm
+  const handleBack = () => {
+    // Save current form data before going back
+    const currentFormData = {
+      dematDetails: form.getValues().dematDetails.map((detail, index) => ({
+        ...detail,
+        clientMasterCopy: uploadedUrls[index] || null,
+      })),
+    };
+
+    // Store in localStorage
+    const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
+    const updatedData = {
+      ...existingData,
+      [step]: currentFormData
+    };
+    localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
+
+    // Also save the uploaded URLs separately
+    localStorage.setItem('dematDetailUploadedUrls', JSON.stringify(uploadedUrls));
+
+    handleStepChange(step - 1);
   };
 
   return (
@@ -265,7 +305,7 @@ const DematAccountForm= ({ onSubmit, initialData }) => {
             <div className="flex justify-between mt-6">
               <Button
                 type="button"
-                onClick={() => onSubmit(form.getValues(), 4)}
+                onClick={handleBack}
                 variant="secondary"
               >
                 Back
