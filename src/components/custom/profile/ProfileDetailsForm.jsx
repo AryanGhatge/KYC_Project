@@ -40,7 +40,12 @@ const annualSalaryData = [
   "More than 25 LPA",
 ];
 
-const ProfileDetailsForm = ({ onSubmit, initialData }) => {
+const ProfileDetailsForm = ({
+  onSubmit,
+  initialData,
+  step,
+  handleStepChange,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(profileDetailSchema),
@@ -78,8 +83,14 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
     }
   };
 
+  // Example for BankDetailsForm
+  const handleBack = () => {
+    // onSubmit(form.getValues(), step - 1);
+    handleStepChange(step - 1);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center lg:min-h-[calc(100%-180px)] py-12">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
         <Form {...form}>
@@ -264,11 +275,7 @@ const ProfileDetailsForm = ({ onSubmit, initialData }) => {
             </div>
 
             <div className="flex justify-between mt-6">
-              <Button
-                type="button"
-                onClick={() => onSubmit(form.getValues(), 2)}
-                variant="secondary"
-              >
+              <Button type="button" onClick={handleBack} variant="secondary">
                 Back
               </Button>
               <Button type="submit" variant="default" disabled={isSubmitting}>

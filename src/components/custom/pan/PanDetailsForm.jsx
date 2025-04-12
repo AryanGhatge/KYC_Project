@@ -20,11 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { panDetailsSchema } from "@/lib/schemas/e-kyc/panDetailsSchema";
-import { z } from "zod";
 import { showToast } from "@/lib/showToast";
-import { panService } from "@/lib/apiService/panService";
 
-const PanDetailsForm = ({ onSubmit, initialData }) => {
+const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formMethods = useForm({
     resolver: zodResolver(panDetailsSchema),
@@ -38,6 +36,22 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
   });
 
   useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem("ekycFormData") || "{}");
+    const panData = savedData[0]; // step 1 data
+    console.log("panData", panData);
+    if (panData) {
+      Object.entries(panData).forEach(([key, value]) => {
+        // Handle date conversion for dateOfBirth
+        if (key === "dateOfBirth") {
+          formMethods.setValue(key, new Date(value));
+        } else {
+          formMethods.setValue(key, value);
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if (initialData) {
       Object.entries(initialData).forEach(([key, value]) => {
         formMethods.setValue(key, value);
@@ -47,7 +61,18 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
 
   const handleSubmitForm = async (data) => {
     try {
-      // const response = await panService.registerPan(data);
+      setIsSubmitting(true);
+
+      // Save form data to localStorage
+      const existingData = JSON.parse(
+        localStorage.getItem("ekycFormData") || "{}"
+      );
+      const updatedData = {
+        ...existingData,
+        [1]: data, // Save step 1 data
+      };
+      localStorage.setItem("ekycFormData", JSON.stringify(updatedData));
+
       console.log("PAN details submitted successfully:", data);
       showToast.success("Details submitted successfully!");
       onSubmit(data, 1);
@@ -62,12 +87,10 @@ const PanDetailsForm = ({ onSubmit, initialData }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center lg:min-h-screen">
-      <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg border-2 flex-col justify-between h-full">
+    <div className="flex flex-col items-center justify-center lg:my-28 lg:min-h-[calc(100%-20px)]">
+      <div className="w-full max-w-4xl p-4 bg-white rounded-lg  shadow-lg border-2 flex-col justify-between h-full">
         <div>
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Personal Details
-          </h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Pan Details</h2>
           <Form {...formMethods}>
             <form
               onSubmit={formMethods.handleSubmit(handleSubmitForm)}

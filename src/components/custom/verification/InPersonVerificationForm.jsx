@@ -9,16 +9,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import InPersonPhoto from "@/../public/inpersonphoto.png";
 import { FaLocationDot, FaCheck } from "react-icons/fa6";
-
-const InPersonVerificationForm = ({ onSubmit, initialData }) => {
+import UploadImages from "../UploadImages";
+const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
 
   const formMethods = useForm({
     defaultValues: {
@@ -39,9 +37,8 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
   useEffect(() => {
     if (initialData) {
       if (initialData.image) {
-        setImage(initialData.image);
+        setUploadedImageUrl(initialData.image);
         setValue("image", initialData.image);
-        setPreviewUrl(URL.createObjectURL(initialData.image));
       }
       if (initialData.location) {
         setLocation(initialData.location);
@@ -49,34 +46,14 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
         setLocationAllowed(true);
       }
     }
-  }, [initialData, setValue]);
 
-  const onDrop = (acceptedFiles) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      if (file.size > MAX_FILE_SIZE) {
-        setError("image", {
-          type: "manual",
-          message: "File size must be less than 5 MB.",
-        });
-      } else {
-        clearErrors("image");
-        setImage(file);
-        setValue("image", file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        console.log("Preview URL:", url); // Check the URL here
-      }
+    // Load image URL from localStorage if available
+    const storedImageUrl = localStorage.getItem("inPersonVerificationImageUrl");
+    if (storedImageUrl) {
+      setUploadedImageUrl(storedImageUrl);
+      setValue("image", storedImageUrl);
     }
-  };
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-    },
-  });
+  }, [initialData, setValue]);
 
   const handleLocationAccess = () => {
     navigator.geolocation.getCurrentPosition(
@@ -93,6 +70,15 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
     );
   };
 
+  const handleUploadSuccess = (result) => {
+    const secureUrl = result.info.secure_url;
+    setUploadedImageUrl(secureUrl);
+    setValue("image", secureUrl);
+
+    // Store the uploaded URL in localStorage
+    localStorage.setItem("inPersonVerificationImageUrl", secureUrl);
+  };
+
   const handleFormSubmit = (data) => {
     if (!locationAllowed) {
       setError("location", {
@@ -102,11 +88,38 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
       return;
     }
 
+    if (!data.image) {
+      setError("image", {
+        type: "manual",
+        message: "Please upload an image.",
+      });
+      return;
+    }
+
     onSubmit(data, 6);
   };
 
+  const handleBack = () => {
+    // Save current form data before going back
+    const currentFormData = {
+      image: uploadedImageUrl,
+      location: location
+    };
+
+    // Store in localStorage
+    const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
+    const updatedData = {
+      ...existingData,
+      [step]: currentFormData
+    };
+    localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
+
+    // Navigate to previous step
+    handleStepChange(step - 1);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen pt-14">
+    <div className="flex flex-col items-center justify-center lg:min-h-[calc(100%-100px)] py-10">
       <div className="w-full max-w-2xl p-8 bg-white rounded-lg shadow-lg border border-gray-200">
         <h2 className="text-3xl font-semibold mb-8 text-center text-gray-800">
           In-Person Verification
@@ -162,17 +175,11 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
                       Upload Image
                     </FormLabel>
                     <FormControl>
-                      <div
-                        {...getRootProps({ className: "dropzone" })}
-                        className="border-2 border-dashed border-gray-300 p-8 rounded-lg text-center cursor-pointer hover:border-indigo-600 transition"
-                      >
-                        <input {...getInputProps()} />
-                        <p className="text-gray-500">
-                          {image
-                            ? `File selected: ${image.name}`
-                            : "Drag & drop your image here, or click to select file"}
-                        </p>
-                      </div>
+                      <UploadImages
+                        text="Upload In-Person Verification Photo"
+                        onSuccess={handleUploadSuccess}
+                        inPerson={true}
+                      />
                     </FormControl>
                     <FormMessage>
                       {errors.image && (
@@ -186,29 +193,34 @@ const InPersonVerificationForm = ({ onSubmit, initialData }) => {
               />
             </div>
 
-            {previewUrl && (
+            {uploadedImageUrl && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-2">Image Preview:</h3>
                 <div className="flex justify-center">
                   <Image
-                    src={previewUrl}
+                    src={uploadedImageUrl}
                     alt="Uploaded Image Preview"
                     width={300}
                     height={300}
-                    objectFit="contain"
+                    style={{ width: "100%", height: "auto" }}
                     className="rounded-lg"
                   />
                 </div>
               </div>
             )}
+            <div className="flex gap-4 ">
+              <Button onClick={handleBack} variant="outline" className="w-1/2">
+                Back
+              </Button>
 
-            <Button
-              type="submit"
-              variant="default"
-              className="w-full py-3 text-lg transition"
-            >
-              Confirm & Proceed
-            </Button>
+              <Button
+                type="submit"
+                variant="default"
+                className="w-full py-3 text-lg transition"
+              >
+                Confirm & Proceed
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

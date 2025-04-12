@@ -10,15 +10,35 @@ import {
 } from "@mantine/core";
 import { IoMoon, IoSunny } from "react-icons/io5";
 import { useTheme } from "next-themes";
+import { useDispatch, useSelector } from "react-redux";
+import { FiLogOut } from "react-icons/fi";
+import { logout } from "@/slices/authSlice";
+import axios from "axios";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const Navbar = () => {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
+  const dispatch = useDispatch();
+
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark");
   };
+
+  const handleLogOut = async() => {
+    try {
+      const response = await axios.post(`${BASE_URL}/auth/logout`);
+      dispatch(logout());
+      router.push("/signin");
+    } catch (error) {
+      console.log(error);
+    }
+
+  }
 
   return (
     <nav className="fixed top-0 lg:top-2 w-full backdrop-blur-md z-50">
@@ -77,7 +97,7 @@ const Navbar = () => {
             {/* Sign In Button */}
             <Button
               variant="outline"
-              onClick={() => router.push("/signin")}
+              onClick={isAuthenticated ? handleLogOut : () => router.push("/signin")}
               className={`
                 flex items-center gap-2 px-4 py-2
                 rounded-full transform hover:scale-105
@@ -90,12 +110,18 @@ const Navbar = () => {
                 transition-all duration-300 ease-in-out
               `}
             >
-              <IoPerson
+              {
+                isAuthenticated ? (<FiLogOut
                 className={`text-lg ${
                   isDark ? "text-blue-400" : "text-blue-600"
                 }`}
-              />
-              <span className={`font-medium`}>Sign in</span>
+              />) : (<IoPerson
+                className={`text-lg ${
+                  isDark ? "text-blue-400" : "text-blue-600"
+                }`}
+              />)
+              }
+              <span className={`font-medium`}>{isAuthenticated ? "Log out" : "Sign In"}</span>
             </Button>
           </div>
         </div>

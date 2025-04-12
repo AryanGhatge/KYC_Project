@@ -20,39 +20,32 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { IoAddCircleOutline } from "react-icons/io5";
-import { FaFile, FaFilePdf, FaTrashAlt } from "react-icons/fa";
+import { FaTrashAlt } from "react-icons/fa";
 import { bankDetailSchema } from "@/lib/schemas/e-kyc/bankDetailSchema";
-import { useDropzone } from "react-dropzone";
-import { bankService } from "@/lib/apiService/bankService";
-import { showToast } from "@/lib/showToast";
+import UploadImages from "../UploadImages";
+import Image from "next/image";
 
 const bankDetailsArraySchema = z.object({
   bankDetails: z.array(bankDetailSchema),
 });
 
-// Default empty bank detail entry
-const emptyBankDetail = {
-  bankName: "",
-  accountType: "",
-  bankAccountNumber: "",
-  ifscCode: "",
-  primary: true,
-  uploadCancelledCheque: null,
-};
-
-const BankDetailsForm = ({ onSubmit, initialData }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Ensure we initialize with at least one empty bank detail form
-  const defaultValues = {
-    bankDetails: initialData?.bankDetails?.length > 0 
-      ? initialData.bankDetails 
-      : [emptyBankDetail]
-  };
+const BankDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
+  const [uploadedUrls, setUploadedUrls] = useState([]);
 
   const form = useForm({
     resolver: zodResolver(bankDetailsArraySchema),
-    defaultValues: defaultValues,
+    defaultValues: initialData || {
+      bankDetails: [
+        {
+          bankName: "",
+          accountType: "Saving",
+          bankAccountNumber: "",
+          ifscCode: "",
+          primary: true,
+          uploadCancelledCheque: null,
+        },
+      ],
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -60,14 +53,67 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
     name: "bankDetails",
   });
 
-  // Reset form when initialData changes
-  useEffect(() => {
-    if (initialData && initialData.bankDetails && initialData.bankDetails.length > 0) {
-      form.reset(initialData);
-    } else {
-      form.reset({ bankDetails: [emptyBankDetail] });
-    }
-  }, [initialData, form]);
+  // Update the useEffect that handles initial data loading
+useEffect(() => {
+  const savedUrls = localStorage.getItem("bankDetailUploadedUrls");
+  if (savedUrls) {
+    const parsedUrls = JSON.parse(savedUrls);
+    setUploadedUrls(parsedUrls);
+  }
+
+  // Fix: Use uploadCancelledCheque instead of cancelledCheque
+  if (initialData?.bankDetails) {
+    const urls = initialData.bankDetails.map(detail => detail.uploadCancelledCheque);
+    setUploadedUrls(urls.filter(url => url !== null));
+  }
+}, [initialData]);
+
+// Update handleBack function
+const handleBack = () => {
+  const currentFormData = {
+    bankDetails: form.getValues().bankDetails.map((detail, index) => ({
+      ...detail,
+      uploadCancelledCheque: uploadedUrls[index] || null, // Fix: Use uploadCancelledCheque
+    })),
+  };
+
+  const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
+  const updatedData = {
+    ...existingData,
+    [step]: currentFormData
+  };
+  localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
+  localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(uploadedUrls));
+
+  handleStepChange(step - 1);
+};
+
+// Update handleUploadSuccess function
+const handleUploadSuccess = (result, index) => {
+  const secureUrl = result.info.secure_url;
+  setUploadedUrls(prevUrls => {
+    const newUrls = [...prevUrls];
+    newUrls[index] = secureUrl;
+    localStorage.setItem('bankDetailUploadedUrls', JSON.stringify(newUrls));
+    return newUrls;
+  });
+  // Fix: Use uploadCancelledCheque instead of cancelledCheque
+  form.setValue(`bankDetails.${index}.uploadCancelledCheque`, secureUrl);
+};
+
+// Update handleSubmit function
+const handleSubmit = (data) => {
+  const submissionData = {
+    ...data,
+    bankDetails: data.bankDetails.map((detail, index) => ({
+      ...detail,
+      uploadCancelledCheque: uploadedUrls[index] || null,
+    })),
+  };
+
+  localStorage.setItem("bankDetailUploadedUrls", JSON.stringify(uploadedUrls));
+  onSubmit(submissionData, 4);
+};
 
   const handlePrimaryChange = (index) => {
     const updatedFields = fields.map((field, i) => ({
@@ -79,74 +125,25 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
     });
   };
 
-  const handleSubmit = async (data) => {
-    setIsSubmitting(true);
-    try {
-      // const response = await bankService.registerBank(data);
-      console.log("Bank details registered:", data);
-      showToast.success("Details submitted successfully!");
-      onSubmit(data, 4);
-    } catch (error) {
-      console.error("Error registering bank details:", error);
-      showToast.error(
-        error.message || "Something went wrong. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
     }
-  };
+  }, [initialData, form]);
 
   const handleAddBankAccount = () => {
     append({
-      ...emptyBankDetail,
-      primary: false, // Only the first bank account is primary by default
+      bankName: "",
+      accountType: "Saving",
+      bankAccountNumber: "",
+      ifscCode: "",
+      primary: false,
+      uploadCancelledCheque: null,
     });
   };
 
-  const renderFilePreview = (file) => {
-    if (!file) return null;
-
-    if (typeof file === "string") {
-      // If file is a string (filename), render a generic file icon
-      return (
-        <div className="flex items-center">
-          <FaFile className="mr-2" />
-          <span>{file}</span>
-        </div>
-      );
-    }
-
-    if (file.type.startsWith("image/")) {
-      return (
-        <img
-          src={URL.createObjectURL(file)}
-          alt="Preview"
-          className="max-w-full h-auto max-h-40 mt-2"
-        />
-      );
-    } else if (file.type === "application/pdf") {
-      return (
-        <Button
-          onClick={() => window.open(URL.createObjectURL(file), "_blank")}
-          className="flex items-center"
-        >
-          <FaFilePdf className="mr-2" />
-          View PDF
-        </Button>
-      );
-    }
-    return null;
-  };
-
-  // Ensure we have at least one form field
-  useEffect(() => {
-    if (fields.length === 0) {
-      append(emptyBankDetail);
-    }
-  }, [fields, append]);
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center lg:my-8 lg:min-h-[calc(100%-100px)] py-5">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
         <h2 className="text-2xl font-bold mb-6 text-center">Bank Details</h2>
         <Form {...form}>
@@ -239,65 +236,38 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
                   <div className="">Upload Cancelled Cheque</div>
                 </div>
 
-                {/* Drag and Drop File Upload */}
-                <div className="mt-2">
+                <div className="mt-4">
                   <FormField
                     control={form.control}
-                    name={`bankDetails.${index}.cancelledCheque`}
-                    render={({ field: { onChange, value } }) => {
-                      const { getRootProps, getInputProps, isDragActive } =
-                        useDropzone({
-                          accept: {
-                            "image/*": [],
-                            "application/pdf": [],
-                          },
-                          maxSize: 5 * 1024 * 1024, // 5 MB max size
-                          onDrop: (acceptedFiles) => {
-                            onChange(acceptedFiles[0]);
-                          },
-                        });
-
-                      return (
-                        <FormItem>
-                          <FormLabel>Upload Cancelled Cheque</FormLabel>
-                          <FormControl>
-                            <div
-                              {...getRootProps()}
-                              className={`border-2 border-dashed rounded-lg p-4 cursor-pointer ${
-                                isDragActive
-                                  ? "border-blue-500"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              <input {...getInputProps()} />
-                              {value ? (
-                                <div className="flex justify-between">
-                                  <p className="text-sm">
-                                    {typeof value === "string"
-                                      ? value
-                                      : value.name}
-                                    {typeof value !== "string" && (
-                                      <p className="text-xs text-gray-500">
-                                        {(value.size / 1024 / 1024).toFixed(2)}{" "}
-                                        MB
-                                      </p>
-                                    )}
-                                  </p>
-
-                                  {renderFilePreview(value)}
-                                </div>
-                              ) : (
-                                <p className="text-center text-gray-500">
-                                  Drag and drop to upload a cancelled cheque
-                                  (Image/PDF)
-                                </p>
-                              )}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                    name={`bankDetails.${index}.uploadCancelledCheque`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <UploadImages
+                            text={"Upload Cancelled Cheque"}
+                            onSuccess={(result) =>
+                              handleUploadSuccess(result, index)
+                            }
+                            inPerson={false}
+                          />
+                        </FormControl>
+                        {uploadedUrls[index] && (
+                          <div className="mt-4">
+                            <Image
+                              src={uploadedUrls[index]}
+                              alt={`Uploaded cheque for account ${index + 1}`}
+                              width={300}
+                              height={200}
+                              style={{ width: "100%", height: "auto" }}
+                            />
+                            <p className="text-sm text-green-600 mt-2">
+                              Image uploaded successfully
+                            </p>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
@@ -351,13 +321,13 @@ const BankDetailsForm = ({ onSubmit, initialData }) => {
             <div className="flex justify-between mt-6">
               <Button
                 type="button"
-                onClick={() => onSubmit(form.getValues(), 3)}
+                onClick={handleBack}
                 variant="secondary"
               >
                 Back
               </Button>
-              <Button type="submit" variant="default" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Next"}
+              <Button type="submit" variant="default">
+                Next
               </Button>
             </div>
           </form>

@@ -27,7 +27,7 @@ import {
 import { showToast } from "@/lib/showToast";
 import { addressService } from "@/lib/apiService/addressService";
 
-const AddressForm = ({ onSubmit, initialData }) => {
+const AddressForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formMethods = useForm({
     resolver: zodResolver(addressDetailSchema),
@@ -67,8 +67,14 @@ const AddressForm = ({ onSubmit, initialData }) => {
     }
   };
 
+  // Example for BankDetailsForm
+const handleBack = () => {
+  // onSubmit(formMethods.getValues(), step - 1);
+  handleStepChange(step - 1);
+};
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center lg:my-8 lg:min-h-[calc(100%-100px)]">
       <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg border-2 flex flex-col justify-between h-full">
         <div>
           <h2 className="text-2xl font-bold mb-6 text-center">
@@ -276,7 +282,7 @@ const AddressForm = ({ onSubmit, initialData }) => {
               <div className="flex justify-between mt-4">
                 <Button
                   type="button"
-                  onClick={() => onSubmit(formMethods.getValues(), 1)}
+                  onClick={handleBack}
                   variant="secondary"
                 >
                   Back

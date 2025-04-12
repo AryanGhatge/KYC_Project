@@ -1,13 +1,15 @@
-"use client";
+'use client';
 
-import { Provider } from "react-redux";
-import { store } from "./store/index";
-// import { SessionProvider } from "next-auth/react";
+import { persistor, store } from '@/lib/persistor';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 
 export function Providers({ children }) {
   return (
-    // <SessionProvider>
-    <Provider store={store}>{children}</Provider>
-    // </SessionProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        {children}
+      </PersistGate>
+    </Provider>
   );
 }

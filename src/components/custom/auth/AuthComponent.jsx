@@ -8,6 +8,8 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/slices/authSlice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -21,6 +23,7 @@ const AuthComponent = ({ isLogin = true }) => {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const dispatch = useDispatch(); 
 
   const validateForm = () => {
     const newErrors = {};
@@ -45,36 +48,51 @@ const AuthComponent = ({ isLogin = true }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = isLogin
-      ? { email, password }
-      : {
-          email,
-          password,
-          confirmedPassword: confirmPassword,
-          name: fullName,
-          mobileNo: mobileNo,
+    try {
+      if (!validateForm()) return;
+  
+      const payload = isLogin
+        ? { email, password }
+        : {
+            email,
+            password,
+            confirmedPassword: confirmPassword,
+            name: fullName,
+            mobileNo: mobileNo,
+          };
+  
+      const response = await axios.post(
+        isLogin ? `${BASE_URL}/auth/login` : `${BASE_URL}/auth/register`,
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+  
+      if (response.data.success === true) {
+        const userData = {
+          name: response.data.user.name,
+          email: response.data.user.email,
+          id: response.data.user._id,
         };
-
-    const response = await axios.post(
-      isLogin ? `${BASE_URL}/auth/login` : `${BASE_URL}/auth/register`,
-      payload, // 🚀 Pass JSON data directly
-      {
-        headers: { "Content-Type": "application/json" }, // ✅ Headers go here, not inside the payload
-        withCredentials: true,
-      }
-    );
-    // console.log(response);
-    if (response.data.success === true) {
-      console.log(response.data);
-      const data = await response.data;
-      if (data.success) {
-        router.push("/");
+        
+        // Dispatch user data to Redux
+        // console.log('Dispatching user data:', userData);
+        await dispatch(setUser(userData));
+        
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          router.push("/");
+        }, 100);
       } else {
-        alert(data.message);
+        setErrors({ submit: response.data.message || "Authentication failed" });
       }
-    } else {
-      console.error("Error:", response);
-      alert("An error occurred. Please try again.");
+    } catch (error) {
+      console.error("Error:", error);
+      setErrors({
+        submit: error.response?.data?.message || "An error occurred. Please try again."
+      });
     }
   };
 
