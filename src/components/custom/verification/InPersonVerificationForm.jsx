@@ -13,10 +13,7 @@ import Image from "next/image";
 import InPersonPhoto from "@/../public/inpersonphoto.png";
 import { FaLocationDot, FaCheck } from "react-icons/fa6";
 import UploadImages from "../UploadImages";
-const InPersonVerificationForm= ({
-  onSubmit,
-  initialData,
-}) => {
+const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
@@ -100,6 +97,25 @@ const InPersonVerificationForm= ({
     }
 
     onSubmit(data, 6);
+  };
+
+  const handleBack = () => {
+    // Save current form data before going back
+    const currentFormData = {
+      image: uploadedImageUrl,
+      location: location
+    };
+
+    // Store in localStorage
+    const existingData = JSON.parse(localStorage.getItem('ekycFormData') || '{}');
+    const updatedData = {
+      ...existingData,
+      [step]: currentFormData
+    };
+    localStorage.setItem('ekycFormData', JSON.stringify(updatedData));
+
+    // Navigate to previous step
+    handleStepChange(step - 1);
   };
 
   return (
@@ -192,14 +208,19 @@ const InPersonVerificationForm= ({
                 </div>
               </div>
             )}
+            <div className="flex gap-4 ">
+              <Button onClick={handleBack} variant="outline" className="w-1/2">
+                Back
+              </Button>
 
-            <Button
-              type="submit"
-              variant="default"
-              className="w-full py-3 text-lg transition"
-            >
-              Confirm & Proceed
-            </Button>
+              <Button
+                type="submit"
+                variant="default"
+                className="w-full py-3 text-lg transition"
+              >
+                Confirm & Proceed
+              </Button>
+            </div>
           </form>
         </Form>
       </div>
