@@ -102,10 +102,11 @@ PUT /data/update_data
 ```json
 {
   "panDetails": {
-    "panNumber": "ABCDE1234F",
+    "panNumber": "AZJPG7110R",
+    "name": "JOHN SNOW",
     "mobileNo": "9876543210",
     "dateOfBirth": "1995-08-15",
-    "email": "user@example.com",
+    "email": "abi@example.com",
     "iAm": "Individual"
   },
   "profileDetails": {
