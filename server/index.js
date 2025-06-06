@@ -1,5 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+
 const passport = require("./config/passport");
 const MongoStore = require("connect-mongo");
 const cors = require("cors");
@@ -11,7 +13,9 @@ const updateUserRoute = require("./routes/updateUser.routes");
 // const dematRoutes = require("./routes/demat.routes");
 // const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
-require("dotenv").config();
+
+const panValidationRoutes = require("./routes/validation/panValidation.routes");
+
 const db = require("./config/dbConnect");
 
 const cookieParser = require("cookie-parser");
@@ -49,6 +53,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
+app.use("/v1/validation", panValidationRoutes);
 // app.use("/v1/pan", isAuthenticated, panRoutes);
 // app.use("/v1/address", isAuthenticated, addressRoutes);
 // app.use("/v1/bank", isAuthenticated, bankRoutes);

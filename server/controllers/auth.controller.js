@@ -5,14 +5,7 @@ module.exports.register = async (req, res) => {
   try {
     const { password, confirmedPassword, name, mobileNo } = req.body;
     const email = req.body.email;
-        console.log(
-          "User: ",
-          email,
-          password,
-          confirmedPassword,
-          name,
-          mobileNo
-        );
+    console.log("User: ", email, password, confirmedPassword, name, mobileNo);
 
     // Check if user already exists
     const user = await updated_user.findOne({ email });
@@ -22,7 +15,6 @@ module.exports.register = async (req, res) => {
         success: false,
       });
     }
-
 
     // Validate password and confirmedPassword
     if (password !== confirmedPassword) {
@@ -69,10 +61,19 @@ exports.login = (req, res) => {
 exports.logout = (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({ message: "Logout failed" });
-    res.json({ message: "Logout successful" });
+
+    req.session.destroy((err) => {
+      if (err)
+        return res.status(500).json({ message: "Session destruction failed" });
+
+      // Clear the session cookie from the browser
+      res.clearCookie("connect.sid", {
+        path: "/",
+        httpOnly: true,
+        secure: false,
+      });
+
+      res.json({ message: "Logout successful" });
+    });
   });
 };
-
-exports.isLoggedIn = (req, res) => {
-  
-}
