@@ -3,7 +3,10 @@ import { getCashfreeToken } from "./cashfreeToken.service";
 
 export const validateBankDetails = async (data) => {
   try {
-    const token = await getCashfreeToken();
+    
+     const clientId = process.env.CF_CLIENT_ID; // Sandbox client id
+    const clientSecret = process.env.CF_CLIENT_SECRET; // Sandbox secret
+    const publicKeyPath = process.env.CF_PUBLIC_KEY_PATH; // Path to public key PEM
 
     const response = await got
       .post(
