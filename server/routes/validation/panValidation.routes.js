@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { verifyPanSandbox } = require("../../services/panValidation.service");
+const {generateVerificationId} = require("../../utils/generateVeficationId")
 
-const generateVerificationId = () => {
-  return `panverify_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-};
 
 router.post("/verify-pan", async (req, res) => {
   let { pan, verification_id, name } = req.body;

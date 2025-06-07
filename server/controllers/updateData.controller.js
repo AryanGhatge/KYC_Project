@@ -55,6 +55,10 @@ exports.updateUserProfile = async (req, res) => {
       }
     }
 
+    // Update bank validation 
+    // extract primary bank validation
+
+
     // 🔁 Update user after validation
     const updatedUser = await User.findByIdAndUpdate(
       userId,

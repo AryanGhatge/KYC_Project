@@ -1,25 +1,43 @@
 const got = require("got");
-import { getCashfreeToken } from "./cashfreeToken.service";
+const {generateSignature} = require("../utils/generateSignature");
 
-export const validateBankDetails = async (data) => {
+exports.validateBankDetails = async ({ bank_account, ifsc, name, verification_id }) => {
   try {
     
      const clientId = process.env.CF_CLIENT_ID; // Sandbox client id
     const clientSecret = process.env.CF_CLIENT_SECRET; // Sandbox secret
     const publicKeyPath = process.env.CF_PUBLIC_KEY_PATH; // Path to public key PEM
 
+    const signature = generateSignature(clientId, publicKeyPath);
+
+    const headers = {
+      "x-client-id": clientId,
+      "x-client-secret": clientSecret,
+      "x-cf-signature": signature, // <-- Must include signature
+      "Content-Type": "application/json",
+    };
+
+    const body = {
+      bank_account,
+      ifsc,
+      name,
+      verification_id
+    }
+
     const response = await got
-      .post(
-        "https://payout-api.cashfree.com/payout/v1.2/validation/bankDetails",
+      .get(
+        "https://sandbox.cashfree.com/verification/bank-account/sync",
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          json: data,
+            headers: headers,
+          json: body,
         }
       )
       .json();
+
+      console.log(
+      "Bank verification (sandbox) success:",
+      JSON.stringify(response, null, 2)
+    );
 
     return response;
   } catch (error) {
