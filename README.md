@@ -225,6 +225,40 @@ PUT /data/update_data
 }
 ```
 
+---
+
+### 1.5 User Liveliness check
+
+**Endpoint:**
+
+```
+POST /image/liveliness_check
+```
+
+**Request**
+
+```formData
+  image : file
+
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "reference_id": 115674,
+    "verification_id": "N416PI271",
+    "status": "SUCCESS",
+    "liveliness": false,
+    "score": 0.04
+  }
+}
+```
+
+---
+
 **_ Env _**
 MONGO_URI =
 PORT = 8081
