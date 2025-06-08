@@ -93,10 +93,13 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
         image: uploadedImageUrl,
         // other required data
       });
+
+      // console.log("Verification result:", result);
       
       // handle the verification result
       if (result.success) {
         toast.success("Verification successful!");
+        handleStepChange(step + 1); 
         // handle success
       } else {
         toast.error(result.message || "Verification failed");

@@ -372,7 +372,7 @@ const ESignForm = (handleStepChange, step, steps, onsubmit, initialData) => {
   const dateOfBirth = formatDate(formData["1"]?.dateOfBirth);
 
   const handleSubmit = () => {
-    toast.success("E-sign submitted successfully!");
+    toast.success("KYC form submitted successfully!");
     router.push("/");
   };
 
@@ -872,7 +872,7 @@ const ESignForm = (handleStepChange, step, steps, onsubmit, initialData) => {
             Back
           </Button>
           <Button onClick={handleSubmit} className="w-2/3 ">
-            E-Sign and Submit
+            Submit
           </Button>
         </div>
       </div>
