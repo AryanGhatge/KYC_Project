@@ -25,7 +25,7 @@ exports.validateBankDetails = async ({ bank_account, ifsc, name, verification_id
     }
 
     const response = await got
-      .get(
+      .post(
         "https://sandbox.cashfree.com/verification/bank-account/sync",
         {
             headers: headers,
