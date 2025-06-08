@@ -15,8 +15,9 @@ function convertAnnualIncome(income) {
     return incomeMap[income] || 0;
   }
 
-export function transformDataForAPI(localStorageData) {
+export function transformDataForAPI(localStorageData, name) {
     const apiData = {
+      name: name,
       panDetails: {
         panNumber: localStorageData[1]?.panNumber || "",
         mobileNo: localStorageData[1]?.mobileNumber || "",

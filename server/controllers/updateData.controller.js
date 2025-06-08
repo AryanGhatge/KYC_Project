@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 8080;
 
 
 exports.updateUserProfile = async (req, res) => {
+  console.log("Update request received:", req.body);
   try {
     if (!req.user) {
       return res
@@ -60,7 +61,7 @@ exports.updateUserProfile = async (req, res) => {
 
     // Update bank validation 
     // extract primary bank validation
-    const bank = updatedDate?.bank[0];
+    const bank = updateData?.bankDetails[0];
     if(!bank) {
       return res.status(404).json({
         sucess:false,
@@ -75,14 +76,19 @@ exports.updateUserProfile = async (req, res) => {
       console.log("Doing bank verification");
 
       try {
+        // console.log("Verifying bank details:", {
+        //   bank_account,
+        //   ifsc,
+        //   name: updateData.name,
+        // });
         const bankResponse = await got.post(
-          `http://localhost:${PORT}/v1/validation/verify-bank`,
+          `http://localhost:${PORT}/v1/bankValidation/verify-bank`,
           {
             json: {
               bank_account : bank_account,
               ifsc : ifsc,
-              name : name,
-              verification_id: "auto-gen-verification-id",
+              name : updateData.name,
+              verification_id: "kyc-bank-verification-id",
             },
             responseType: "json",
           }

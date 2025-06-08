@@ -162,3 +162,63 @@ body {
 .animate-spin-slow {
   animation: spin-slow 4s linear infinite;
 }
+
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.875rem;
+    pointer-events: none;
+  }
+
+  .tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-container .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .page-break {
+      margin: 0;
+      padding: 20px;
+      box-shadow: none;
+    }
+
+    body {
+      background: white;
+    }
+  }
