@@ -57,7 +57,55 @@ exports.updateUserProfile = async (req, res) => {
 
     // Update bank validation 
     // extract primary bank validation
+    const bank = updatedDate?.bank[0];
+    if(!bank) {
+      return res.status(404).json({
+        sucess:false,
+        message:"Bank Account required"
+      })
+    }
 
+    const bank_account = bank.bankAccountNumber;
+    const ifsc = bank.ifscCode;
+
+    if(bank_account && ifsc) {
+      console.log("Doing bank verification");
+
+      try {
+        const bankResponse = await got.post(
+          "http://localhost:8081/v1/validation/verify-bank",
+          {
+            json: {
+              bank_account : bank_account,
+              ifsc : ifsc,
+              name : name,
+              verification_id: "auto-gen-verification-id",
+            },
+            responseType: "json",
+          }
+        );
+
+        console.log("✅ Bank verification response:", bankResponse.body);
+
+        if (bankResponse.body.status !== "VALID") {
+          return res.status(400).json({
+            success: false,
+            message: "Bank verification failed. Please check your Bank details.",
+            data: bankResponse.body,
+          });
+        }
+      } catch (apiError) {
+        console.error(
+          "❌ Bank verification API error:",
+          apiError.response?.body || apiError.message
+        );
+        return res.status(500).json({
+          success: false,
+          message: "Failed to verify Bank with external API.",
+        });
+      }
+
+    }
 
     // 🔁 Update user after validation
     const updatedUser = await User.findByIdAndUpdate(
