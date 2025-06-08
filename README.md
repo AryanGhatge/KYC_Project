@@ -259,6 +259,81 @@ POST /image/liveliness_check
 
 ---
 
+### 1.6 User Deatails
+
+**Endpoint:**
+
+```
+GET /user/getDetails
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "panDetails": {
+      "panNumber": "AZJPG7110R",
+      "dateOfBirth": "1995-08-15T00:00:00.000Z",
+      "iAm": "Individual"
+    },
+    "profileDetails": {
+      "gender": "Male",
+      "placeOfBirth": "Pune",
+      "occupation": "Software Engineer",
+      "annualIncome": 500000,
+      "citizenship": true,
+      "informationConfirmation": true
+    },
+    "addressDetails": {
+      "permanentAddress": "123, MG Road, Pune",
+      "landmark": "Near City Mall",
+      "permanentCity": "Pune",
+      "permanentPincode": "411001",
+      "permanentState": "Maharashtra",
+      "permanentCountry": "India"
+    },
+    "_id": "6842cb64d0c28cb95856b8ca",
+    "name": "JOHN SNOW",
+    "email": "john@gmail.com",
+    "mobileNo": "9529592242",
+    "bankDetails": [
+      {
+        "bankName": "HDFC Bank",
+        "accountType": "Saving",
+        "bankAccountNumber": "123456789012",
+        "ifscCode": "HDFC0001234",
+        "primary": true,
+        "_id": "6842cb78d0c28cb95856b8cf"
+      },
+      {
+        "bankName": "SBI Bank",
+        "accountType": "Current",
+        "bankAccountNumber": "987654321098",
+        "ifscCode": "SBIN0005678",
+        "primary": false,
+        "_id": "6842cb78d0c28cb95856b8d0"
+      }
+    ],
+    "dematDetails": [
+      {
+        "depository": "NSDL",
+        "dpID": "1234567890123456",
+        "clientID": "6543210987654321",
+        "primary": true,
+        "clientMasterCopy": "BASE64_ENCODED_FILE_HERE",
+        "_id": "6842cb78d0c28cb95856b8ce"
+      }
+    ],
+    "__v": 0,
+    "userImage": "https://res.cloudinary.com/drvlktf2h/image/upload/v1749385756/kyc/khppdnmvvyrxphuuvpqy.jpg"
+  }
+}
+```
+
+---
+
 **_ Env _**
 MONGO_URI =
 PORT = 8081

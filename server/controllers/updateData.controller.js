@@ -22,7 +22,7 @@ exports.updateUserProfile = async (req, res) => {
 
     // 🟡 Extract PAN and Name to send to PAN verification API
     const panNumber = updateData?.panDetails?.panNumber;
-    const name = updateData?.panDetails?.name;
+    const name = updateData?.name;
 
     if (panNumber && name) {
       try {
@@ -96,7 +96,7 @@ exports.updateUserProfile = async (req, res) => {
 
         console.log("✅ Bank verification response:", bankResponse.body);
 
-        if (bankResponse.body.status !== "VALID") {
+        if (bankResponse.body.account_status !== "VALID") {
           return res.status(400).json({
             success: false,
             message: "Bank verification failed. Please check your Bank details.",
@@ -114,6 +114,44 @@ exports.updateUserProfile = async (req, res) => {
         });
       }
 
+    }
+
+    //extract ocr image from userdata
+    const ocrImageUrl = updateData?.bankDetails[0].uploadCancelledCheque;
+    console.log("Uploaded canceled check : ", ocrImageUrl);
+    
+    if(ocrImageUrl) {
+      try {
+        
+        const ocrResponse = await got.post(
+          `http://localhost:${PORT}/v1/ocrValidation/verify-ocr`,
+          {
+            json: {
+              file_url : ocrImageUrl
+            },
+            responseType: "json",
+          }
+        );
+
+        console.log("✅ OCR verification response:", ocrResponse.body);
+
+        if (ocrResponse.body.status !== "VALID") {
+          return res.status(400).json({
+            success: false,
+            message: "OCR verification failed. Please check your OCR details.",
+            data: ocrResponse.body,
+          });
+        }
+      } catch (apiError) {
+        console.error(
+          "❌ OCR verification API error:",
+          apiError.response?.body || apiError.message
+        );
+        return res.status(500).json({
+          success: false,
+          message: "Failed to verify OCR with external API.",
+        });
+      }
     }
 
     // 🔁 Update user after validation

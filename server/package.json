@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "cloudinary": "^2.6.1",
@@ -18,7 +19,8 @@
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "uuid": "^11.1.0"
   },
   "name": "kyc_ab",
   "version": "1.0.0",

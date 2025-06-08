@@ -11,9 +11,8 @@ router.post("/verify-bank", async (req, res) => {
     return res.status(400).json({ message: "Bank Account, IFSC Code and Name are required" });
   }
 
-  if (!verification_id) {
     verification_id = generateVerificationId();
-  }
+  
 
   try {
     const response = await validateBankDetails({ bank_account, ifsc, name, verification_id });
