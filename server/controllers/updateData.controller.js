@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 8080;
 
 
 exports.updateUserProfile = async (req, res) => {
-  //console.log("Update request received:", req.body);
+  console.log("Update request received:", req.body);
   try {
     if (!req.user) {
       return res
@@ -114,6 +114,44 @@ exports.updateUserProfile = async (req, res) => {
         });
       }
 
+    }
+
+    //extract ocr image from userdata
+    const ocrImageUrl = updateData?.bankDetails[0].uploadCancelledCheque;
+    console.log("Uploaded canceled check : ", ocrImageUrl);
+    
+    if(ocrImageUrl) {
+      try {
+        
+        const ocrResponse = await got.post(
+          `http://localhost:${PORT}/v1/ocrValidation/verify-ocr`,
+          {
+            json: {
+              file_url : ocrImageUrl
+            },
+            responseType: "json",
+          }
+        );
+
+        console.log("✅ OCR verification response:", ocrResponse.body);
+
+        if (ocrResponse.body.status !== "VALID") {
+          return res.status(400).json({
+            success: false,
+            message: "OCR verification failed. Please check your OCR details.",
+            data: ocrResponse.body,
+          });
+        }
+      } catch (apiError) {
+        console.error(
+          "❌ OCR verification API error:",
+          apiError.response?.body || apiError.message
+        );
+        return res.status(500).json({
+          success: false,
+          message: "Failed to verify OCR with external API.",
+        });
+      }
     }
 
     // 🔁 Update user after validation

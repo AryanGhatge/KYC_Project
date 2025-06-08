@@ -11,9 +11,8 @@ router.post("/verify-ocr", async (req, res) => {
     return res.status(400).json({ message: "File_Url is required" });
   }
 
-  if (!verification_id) {
     verification_id = generateVerificationId();
-  }
+  
   //hard coding document_type for now as CANCELLED_CHEQUE can be dynamically done using document_type variable
   try {
     const response = await validateOCRDetails({ document_type : "CANCELLED_CHEQUE", file_url, verification_id });
