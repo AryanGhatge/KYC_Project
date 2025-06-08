@@ -16,7 +16,12 @@ const { cloudinaryConnect } = require("./config/cloudinaryConnect");
 
 
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
+<<<<<<< HEAD
+const fileUpload = require("express-fileupload");
+const livelinessRoutes = require("./routes/validation/liveliness.route");
+=======
 const bankValidationRoutes = require("./routes/validation/bankValidation.routes");
+>>>>>>> b310661422a548b4285ec5e26f5fd73ed783a094
 
 const db = require("./config/dbConnect");
 
@@ -41,6 +46,13 @@ app.use(
   })
 );
 
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
+
 // Session Middleware
 app.use(
   session({
@@ -57,7 +69,11 @@ app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
 app.use("/v1/validation", panValidationRoutes);
+<<<<<<< HEAD
+app.use("/v1/image", livelinessRoutes);
+=======
 app.use("/v1/bankValidation", bankValidationRoutes);
+>>>>>>> b310661422a548b4285ec5e26f5fd73ed783a094
 // app.use("/v1/pan", isAuthenticated, panRoutes);
 // app.use("/v1/address", isAuthenticated, addressRoutes);
 // app.use("/v1/bank", isAuthenticated, bankRoutes);
