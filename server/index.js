@@ -13,7 +13,6 @@ const updateUserRoute = require("./routes/updateUser.routes");
 // const dematRoutes = require("./routes/demat.routes");
 // const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
-const { cloudinaryConnect } = require("./config/cloudinary");
 
 
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
@@ -21,6 +20,7 @@ const panValidationRoutes = require("./routes/validation/panValidation.routes");
 const db = require("./config/dbConnect");
 
 const cookieParser = require("cookie-parser");
+const { cloudinaryConnect } = require("./config/cloudinaryConnect");
 
 const app = express();
 app.use(cookieParser());
