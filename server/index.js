@@ -14,11 +14,9 @@ const updateUserRoute = require("./routes/updateUser.routes");
 // const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
 const { cloudinaryConnect } = require("./config/cloudinaryConnect");
-const livelinessRoutes = require("./routes/validation/liveliness.route");
 
 //external validation routes
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
-const fileUpload = require("express-fileupload");
 const livelinessRoutes = require("./routes/validation/liveliness.route");
 const bankValidationRoutes = require("./routes/validation/bankValidation.routes");
 const ocrValidationRoutes = require("./routes/validation/ocrValidation.routes");
