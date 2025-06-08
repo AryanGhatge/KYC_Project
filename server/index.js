@@ -21,7 +21,6 @@ const bankValidationRoutes = require("./routes/validation/bankValidation.routes"
 const db = require("./config/dbConnect");
 
 const cookieParser = require("cookie-parser");
-const { cloudinaryConnect } = require("./config/cloudinaryConnect");
 
 const app = express();
 app.use(cookieParser());
