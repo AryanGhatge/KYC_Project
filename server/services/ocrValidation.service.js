@@ -1,5 +1,7 @@
 const got = require("got");
 const {generateSignature} = require("../utils/generateSignature");
+const axios = require("axios");
+const FormData = require("form-data");
 
 exports.validateOCRDetails= async ({ document_type, file_url, verification_id }) => {
   try {
@@ -10,15 +12,54 @@ exports.validateOCRDetails= async ({ document_type, file_url, verification_id })
 
     const signature = generateSignature(clientId, publicKeyPath);
 
-    const headers = {
+   
+
+    const imageRes = await axios.get(file_url, { responseType: "arraybuffer" });
+    const imageBuffer = Buffer.from(imageRes.data, "binary");
+
+    // Step 2: Create form-data for Cashfree API
+    const form = new FormData();
+    form.append("document_type", document_type);
+    form.append("verification_id", verification_id);
+    form.append("file", imageBuffer, {
+      filename: "document.jpg", // or .png etc. based on your image
+      contentType: imageRes.headers["content-type"]
+    });
+
+     const headers = {
       "x-client-id": clientId,
       "x-client-secret": clientSecret,
       "x-cf-signature": signature, // <-- Must include signature
       "Content-Type": "application/json",
-      "x-api-version" : "2024-12-01"
+      "x-api-version" : "2024-12-01",
+      ...form.getHeaders(),
     };
 
-    const body = {
+    console.log(
+        "Till here"
+    )
+
+    console.log(form)
+    // Step 3: Post to Cashfree OCR API
+    const response = await got
+      .post(
+        "https://sandbox.cashfree.com/verification/bharat-ocr",
+        {
+            headers: headers,
+            body: form
+        }
+      )
+      .json();
+
+    console.log("Till here2")
+
+     console.log(
+      "OCR verification (sandbox) success:",
+      JSON.stringify(response, null, 2)
+    )
+
+
+    /*const body = {
         document_type,
         file_url,
         verification_id
@@ -37,7 +78,7 @@ exports.validateOCRDetails= async ({ document_type, file_url, verification_id })
       console.log(
       "OCR verification (sandbox) success:",
       JSON.stringify(response, null, 2)
-    );
+    );*/
 
     return response;
   } catch (error) {

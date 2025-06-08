@@ -11,9 +11,9 @@ router.post("/verify-pan", async (req, res) => {
     return res.status(400).json({ message: "PAN and Name are required" });
   }
 
-  if (!verification_id) {
-    verification_id = generateVerificationId();
-  }
+
+  verification_id = generateVerificationId();
+  
 
   try {
     const response = await verifyPanSandbox({ pan, verification_id, name });

@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 8080;
 
 
 exports.updateUserProfile = async (req, res) => {
-  console.log("Update request received:", req.body);
+  //console.log("Update request received:", req.body);
   try {
     if (!req.user) {
       return res
@@ -22,7 +22,7 @@ exports.updateUserProfile = async (req, res) => {
 
     // 🟡 Extract PAN and Name to send to PAN verification API
     const panNumber = updateData?.panDetails?.panNumber;
-    const name = updateData?.panDetails?.name;
+    const name = updateData?.name;
 
     if (panNumber && name) {
       try {
@@ -96,7 +96,7 @@ exports.updateUserProfile = async (req, res) => {
 
         console.log("✅ Bank verification response:", bankResponse.body);
 
-        if (bankResponse.body.status !== "VALID") {
+        if (bankResponse.body.account_status !== "VALID") {
           return res.status(400).json({
             success: false,
             message: "Bank verification failed. Please check your Bank details.",
