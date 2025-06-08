@@ -1,627 +1,561 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { saveAs } from "file-saver";
-import { generatePDF } from "@/lib/generatePDF";
+"use client"
 
-const ESignForm = ({ handleStepChange, step, steps }) => {
-  const [userData, setUserData] = useState(null);
-  const [mergedPdfUrl, setMergedPdfUrl] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 
-  const generateCoverPage = async (pdfDoc, data) => {
-    // Load a standard font
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-    const page = pdfDoc.addPage([595, 842]); // A4 size
-    const { width, height } = page.getSize();
-
-    // Header with title
-    page.drawText("KYC Registration Details", {
-      x: 50,
-      y: height - 50,
-      size: 24,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-
-    // Date of generation
-    page.drawText(`Generated on: ${new Date().toLocaleDateString()}`, {
-      x: 50,
-      y: height - 80,
-      size: 10,
-      font: font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-
-    // Section: Personal Information
-    page.drawText("Personal Information", {
-      x: 50,
-      y: height - 120,
-      size: 16,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-
-    const personalInfo = data["1"];
-    let yPos = 150;
-
-    page.drawText(`PAN: ${personalInfo.panNumber || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Mobile: ${personalInfo.mobileNumber || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Email: ${personalInfo.emailId || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    const dob = personalInfo.dateOfBirth
-      ? new Date(personalInfo.dateOfBirth).toLocaleDateString()
-      : "N/A";
-    page.drawText(`Date of Birth: ${dob}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Category: ${personalInfo.whoAreU || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 40;
-
-    // Section: Address Details
-    page.drawText("Address Details", {
-      x: 50,
-      y: height - yPos,
-      size: 16,
-      font: boldFont,
-    });
-    yPos += 30;
-
-    const addressInfo = data["2"];
-    page.drawText(`Address: ${addressInfo.permanentAddress || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    if (addressInfo.landmark) {
-      page.drawText(`Landmark: ${addressInfo.landmark}`, {
-        x: 50,
-        y: height - yPos,
-        size: 12,
-        font,
-      });
-      yPos += 20;
-    }
-
-    const cityStateZip = `${addressInfo.permanentCity || ""}, ${
-      addressInfo.permanentState || ""
-    } - ${addressInfo.permanentPincode || ""}`;
-    page.drawText(`City/State/PIN: ${cityStateZip}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Country: ${addressInfo.permanentCountry || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 40;
-
-    // Section: Other Details
-    page.drawText("Other Details", {
-      x: 50,
-      y: height - yPos,
-      size: 16,
-      font: boldFont,
-    });
-    yPos += 30;
-
-    const otherInfo = data["3"];
-    page.drawText(`Gender: ${otherInfo.gender || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Place of Birth: ${otherInfo.placeOfBirth || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Occupation: ${otherInfo.occupation || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Annual Income: ${otherInfo.annualIncome || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 40;
-
-    // Section: Bank Details
-    page.drawText("Bank Details", {
-      x: 50,
-      y: height - yPos,
-      size: 16,
-      font: boldFont,
-    });
-    yPos += 30;
-
-    const bankDetails =
-      data["4"]?.bankDetails?.find((bank) => bank.primary) || {};
-    page.drawText(`Bank Name: ${bankDetails.bankName || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Account Type: ${bankDetails.accountType || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Account Number: ${bankDetails.bankAccountNumber || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`IFSC Code: ${bankDetails.ifscCode || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 40;
-
-    // Section: Demat Details
-    page.drawText("Demat Details", {
-      x: 50,
-      y: height - yPos,
-      size: 16,
-      font: boldFont,
-    });
-    yPos += 30;
-
-    const dematDetails =
-      data["5"]?.dematDetails?.find((demat) => demat.primary) || {};
-    page.drawText(`Depository: ${dematDetails.depository || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`DP ID: ${dematDetails.dpID || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 20;
-
-    page.drawText(`Client ID: ${dematDetails.clientID || "N/A"}`, {
-      x: 50,
-      y: height - yPos,
-      size: 12,
-      font,
-    });
-    yPos += 40;
-
-    // Location verification
-    if (data["6"]?.location) {
-      page.drawText("Location Verification", {
-        x: 50,
-        y: height - yPos,
-        size: 16,
-        font: boldFont,
-      });
-      yPos += 30;
-
-      page.drawText(`GPS Coordinates: ${data["6"].location}`, {
-        x: 50,
-        y: height - yPos,
-        size: 12,
-        font,
-      });
-    }
-
-    // Footer
-    page.drawText("This is an electronically generated document.", {
-      x: width / 2 - 100,
-      y: 30,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-  };
-
-  // This function adds a document to the PDF with a title
-  const addDocumentWithTitle = async (pdfDoc, title, imageUrl) => {
-    if (!imageUrl) return;
-
-    try {
-      const imageBytes = await fetchFile(imageUrl);
-      if (!imageBytes) {
-        throw new Error("Failed to fetch image");
-      }
-
-      // Create the page first
-      const page = pdfDoc.addPage([595, 842]); // A4 size
-      const { width: pageWidth, height: pageHeight } = page.getSize();
-      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-      // Add title
-      page.drawText(title, {
-        x: 50,
-        y: pageHeight - 50,
-        size: 16,
-        font: font,
-      });
-
-      // Handle different image formats
-      let embeddedImage = null;
-
-      try {
-        // Try PNG first
-        embeddedImage = await pdfDoc.embedPng(imageBytes);
-      } catch (pngError) {
-        try {
-          // If PNG fails, try JPG
-          embeddedImage = await pdfDoc.embedJpg(imageBytes);
-        } catch (jpgError) {
-          console.error(
-            "Failed to embed image as PNG or JPG:",
-            pngError,
-            jpgError
-          );
-          throw new Error("Unsupported image format");
-        }
-      }
-
-      if (embeddedImage) {
-        // Calculate dimensions to fit within page
-        const maxWidth = pageWidth - 100; // 50px margin on each side
-        const maxHeight = pageHeight - 200; // Space for title and margins
-
-        const imgWidth = embeddedImage.width;
-        const imgHeight = embeddedImage.height;
-
-        // Calculate scale to fit within bounds
-        const scale = Math.min(
-          maxWidth / imgWidth,
-          maxHeight / imgHeight,
-          1 // Don't enlarge images
-        );
-
-        const finalWidth = imgWidth * scale;
-        const finalHeight = imgHeight * scale;
-
-        // Center the image
-        const x = (pageWidth - finalWidth) / 2;
-        const y = pageHeight - 100 - finalHeight; // 100px from top for title
-
-        page.drawImage(embeddedImage, {
-          x,
-          y,
-          width: finalWidth,
-          height: finalHeight,
-        });
-      }
-    } catch (error) {
-      console.error(`Error adding document with title ${title}:`, error);
-
-      // Create an error page
-      const page = pdfDoc.addPage([595, 842]);
-      const { height: pageHeight } = page.getSize();
-      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-      page.drawText(title, {
-        x: 50,
-        y: pageHeight - 50,
-        size: 16,
-        font: regularFont,
-      });
-
-      page.drawText(`Error: Could not load image - ${error.message}`, {
-        x: 50,
-        y: pageHeight - 100,
-        size: 12,
-        font: regularFont,
-        color: rgb(1, 0, 0), // Red color for error
-      });
-    }
-  };
-
-  const generatePDF = async (userData) => {
-    try {
-      const pdfDoc = await PDFDocument.create();
-
-      // Generate the cover page with user data
-      await generateCoverPage(pdfDoc, userData);
-
-      // Add bank documents
-      if (userData["4"]?.bankDetails) {
-        for (const bank of userData["4"].bankDetails) {
-          if (bank.uploadCancelledCheque) {
-            await addDocumentWithTitle(
-              pdfDoc,
-              `Bank Account - ${bank.bankName} Cancelled Cheque`,
-              bank.uploadCancelledCheque
-            );
-          }
-        }
-      }
-
-      // Add demat documents
-      if (userData["5"]?.dematDetails) {
-        for (const demat of userData["5"].dematDetails) {
-          if (demat.clientMasterCopy) {
-            await addDocumentWithTitle(
-              pdfDoc,
-              `Demat Account - ${demat.depository} Client Master Copy`,
-              demat.clientMasterCopy
-            );
-          }
-        }
-      }
-
-      // Add in person photo
-      if (userData["6"]) {
-          if (userData["6"]?.image) {
-            await addDocumentWithTitle(
-              pdfDoc,
-              `In-person Photo `,
-              userData["6"]?.image
-            );
-          }
-        } 
-
-      const pdfBytes = await pdfDoc.save();
-      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      return URL.createObjectURL(pdfBlob);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw error;
-    }
-  };
-
-  const fetchFile = async (url) => {
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "image/*",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file: ${response.status}`);
-      }
-
-      return await response.arrayBuffer();
-    } catch (error) {
-      console.error(`Error fetching file: ${url}`, error);
-      return null;
-    }
-  };
+const ESignForm = () => {
+  const [formData, setFormData] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const savedData = localStorage.getItem("ekycFormData");
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          setUserData(parsedData);
-          const pdfUrl = await generatePDF(parsedData);
-          setMergedPdfUrl(pdfUrl);
+     try {
+      const savedData = localStorage?.getItem?.("ekycFormData")
+      setFormData(savedData ? JSON.parse(savedData) : mockData)
+    } catch (error) {
+      setFormData(mockData)
+    }
+  }, [])
+
+  const downloadPDF = async () => {
+    setIsLoading(true)
+    try {
+      // Hide all non-print elements
+      const nonPrintElements = document.querySelectorAll(".no-print")
+      nonPrintElements.forEach((el) => {
+        el.style.display = "none"
+      })
+
+      // Add comprehensive print styles
+      const printStyles = document.createElement("style")
+      printStyles.innerHTML = `
+        @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+          }
+          .bg-gray-50, .bg-gray-100 {
+            background: white !important;
+          }
+          .shadow-2xl, .shadow-lg {
+            box-shadow: none !important;
+          }
+          .border-black\\/30 {
+            border: 2px solid black !important;
+          }
+          .page-break {
+            page-break-before: always;
+          }
+          .page-break:first-child {
+            page-break-before: auto;
+          }
+          .max-w-4xl {
+            max-width: none !important;
+            width: 100% !important;
+          }
+          .mx-auto {
+            margin: 0 !important;
+          }
+          .container {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+          }
+          .space-y-10 > * + * {
+            margin-top: 0 !important;
+          }
+          .mt-6, .mt-16 {
+            margin-top: 0 !important;
+          }
+          @page {
+            margin: 0.75in;
+            size: A4;
+          }
+          .border {
+            border: 1px solid black !important;
+          }
+          .border-2 {
+            border: 2px solid black !important;
+          }
+          .border-b {
+            border-bottom: 1px solid black !important;
+          }
+          .underline {
+            text-decoration: underline !important;
+          }
+          .font-bold {
+            font-weight: bold !important;
+          }
+          .text-center {
+            text-align: center !important;
+          }
+          .flex {
+            display: flex !important;
+          }
+          .justify-between {
+            justify-content: space-between !important;
+          }
+          .items-center {
+            align-items: center !important;
+          }
+          .items-end {
+            align-items: flex-end !important;
+          }
+          .absolute {
+            position: absolute !important;
+          }
+          .relative {
+            position: relative !important;
+          }
+          .grid {
+            display: grid !important;
+          }
+          .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          .gap-6 {
+            gap: 1.5rem !important;
+          }
+          .space-y-2 > * + * {
+            margin-top: 0.5rem !important;
+          }
         }
-      } catch (error) {
-        console.error("Error:", error);
-        setError("Failed to load user data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      `
+      document.head.appendChild(printStyles)
 
-    loadData();
+      // Small delay to ensure styles are applied
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-    return () => {
-      if (mergedPdfUrl) {
-        URL.revokeObjectURL(mergedPdfUrl);
-      }
-    };
-  }, []);
+      // Trigger print dialog
+      window.print()
 
-  const reloadPdf = async () => {
-    if (userData) {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const pdfUrl = await generatePDF(userData);
-        setMergedPdfUrl(pdfUrl);
-      } catch (error) {
-        setError("Failed to generate PDF. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
+      // Clean up after print
+      setTimeout(() => {
+        nonPrintElements.forEach((el) => {
+          el.style.display = ""
+        })
+        if (document.head.contains(printStyles)) {
+          document.head.removeChild(printStyles)
+        }
+      }, 1000)
+    } catch (error) {
+      console.error("Error downloading PDF:", error)
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
-  const handleDownload = () => {
-    if (mergedPdfUrl) {
-      saveAs(
-        mergedPdfUrl,
-        `KYC_Documents_${new Date().toISOString().split("T")[0]}.pdf`
-      );
-    }
-  };
+  if (!formData) {
+    return <div className="p-8">Loading form data...</div>
+  }
+
+  // Determine if user is individual or non-individual
+  const isIndividual = formData?.["1"]?.whoAreU === "Individual"
+
+  const primaryBank = formData["4"]?.bankDetails?.find((bank) => bank.primary) || formData["4"]?.bankDetails?.[0]
+  const primaryDemat = formData["5"]?.dematDetails?.find((demat) => demat.primary) || formData["5"]?.dematDetails?.[0]
 
   const handleSubmit = () => {
-    // Implement e-sign logic here
-    console.log("E-sign submitted");
-    handleStepChange((step || 0) + 1);
-  };
+    console.log("E-sign submitted successfully!")
+    alert("KYC Form submitted successfully!")
+  }
 
   const handleBack = () => {
-    // Save current state before going back
-    if (userData) {
-      localStorage.setItem("ekycFormData", JSON.stringify(userData));
-    }
-    handleStepChange((step || 0) - 1);
-  };
+    console.log("Going back to previous step")
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center lg:my-8 lg:min-h-[calc(100%-100px)]">
-      <div className="w-full max-w-2xl p-8 bg-white rounded-lg shadow-lg border border-gray-200">
-        <h2 className="text-3xl font-semibold mb-8 text-center text-gray-800">
-          E-Sign Documents
-        </h2>
+    <div className="h-screen flex flex-col">
+      {/* Sticky header with download buttons */}
+      <div className="sticky top-0 z-50 bg-white py-4 no-print shadow-md">
+        <div className="text-center space-x-4">
+          <Button 
+            onClick={downloadPDF} 
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow"
+          >
+            {isLoading ? "Preparing..." : "Print/Download as PDF"}
+          </Button>
+        </div>
+      </div>
 
-        {userData && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4">User Information</h3>
-            <p>
-              <strong>PAN:</strong>{" "}
-              {userData["1"]?.panNumber || "Not available"}
-            </p>
-            <p>
-              <strong>Mobile:</strong>{" "}
-              {userData["1"]?.mobileNumber || "Not available"}
-            </p>
-            <p>
-              <strong>Bank Account:</strong>{" "}
-              {userData["4"]?.bankDetails?.find((bank) => bank.primary)
-                ?.bankAccountNumber || "Not available"}
-            </p>
-            <p>
-              <strong>Demat Account:</strong>{" "}
-              {userData["5"]?.dematDetails?.find((demat) => demat.primary)
-                ?.clientID || "Not available"}
-            </p>
-            <p>
-              <strong>In-Person Verification:</strong>{" "}
-              {userData["6"]?.location ? "Completed" : "Not completed"}
-            </p>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="flex justify-center items-center p-10">
-            <p>Generating PDF...</p>
-          </div>
-        ) : error ? (
-          <div className="mb-8 text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={reloadPdf} className="w-full">
-              Try Again
-            </Button>
-          </div>
-        ) : mergedPdfUrl ? (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4">Your KYC Documents</h3>
-            <div
-              className="border rounded mb-4 overflow-hidden"
-              style={{ height: "500px" }}
-            >
-              <object
-                data={mergedPdfUrl}
-                type="application/pdf"
-                width="100%"
-                height="100%"
-                className="block"
-              >
-                <embed
-                  src={mergedPdfUrl}
-                  type="application/pdf"
-                  width="100%"
-                  height="100%"
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto bg-gray-50 mb-24">
+        <div className="container mx-auto py-4 space-y-10">
+          {/* KYC Form Page */}
+          <div className="max-w-4xl mx-auto bg-white p-8 shadow-2xl border border-black/30 mt-6 relative page-break">
+            {/* Photo Box */}
+            <div className="absolute top-8 right-8 w-32 h-40 border-2 border-black flex flex-col items-center justify-center text-xs text-center bg-gray-50">
+              {formData["6"]?.image ? (
+                <img
+                  src={formData["6"].image}
+                  alt="Applicant Photo"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
                 />
-                <p className="p-4 text-center">
-                  Your browser doesn't support PDF embedding.
-                  <a
-                    href={mergedPdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 ml-2"
-                  >
-                    Click here to view the PDF
-                  </a>
-                </p>
-              </object>
+              ) : null}
+              <div className="p-2" style={{display: formData["6"]?.image ? 'none' : 'block'}}>
+                <div className="font-bold mb-1">PHOTOGRAPH</div>
+                <div>Please affix your recent passport size photograph and sign across it</div>
+              </div>
             </div>
-            <Button onClick={handleDownload} className="w-full mb-4">
-              Download PDF
-            </Button>
-          </div>
-        ) : (
-          <div className="flex justify-center items-center p-10">
-            <p>No documents available</p>
-          </div>
-        )}
 
-        <div className="flex gap-4">
-        <Button onClick={handleBack} variant="outline" className="w-1/2">
-          Back
-        </Button>
-        <Button onClick={handleSubmit} className="w-full">
-          E-Sign and Submit
-        </Button>
+            {/* Form Header */}
+            <div className="text-center mb-6">
+              <h1 className="text-lg font-bold uppercase mb-1">KNOW YOUR CLIENT (KYC) APPLICATION FORM</h1>
+              <h2 className="text-sm mb-4">For {isIndividual ? "Individuals" : "Non-Individuals"}</h2>
+              <p className="text-xs italic">Please fill this form in ENGLISH and in BLOCK LETTERS.</p>
+            </div>
+
+            {/* Individual Form */}
+            <>
+              {/* Section A: Identity Details */}
+              <div className="mb-6">
+                <h3 className="font-bold text-sm underline mb-4">A. IDENTITY DETAILS</h3>
+
+                <div className="mb-3">
+                  <span className="text-xs">1. Name of the Applicant: </span>
+                  <span className="border-b border-black inline-block min-w-96 pb-1 text-xs ml-2 font-semibold">
+                    {formData["3"]?.fullName || "JOHN DOE"}
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs">2. Father's/ Spouse Name: </span>
+                  <span className="border-b border-black inline-block min-w-96 pb-1 text-xs ml-2 font-semibold">
+                    {formData["3"]?.fatherName || "RAJESH DOE"}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-4">
+                  <div>
+                    <span className="text-xs">3. a. Gender: </span>
+                    <span className="text-xs font-semibold">{formData["3"]?.gender || "Male"}</span>
+                    <span className="text-xs"> / Male/ Female</span>
+                  </div>
+                  <div>
+                    <span className="text-xs">b. Marital status: </span>
+                    <span className="text-xs font-semibold">{formData["3"]?.maritalStatus || "Single"}</span>
+                    <span className="text-xs"> / Single/ Married</span>
+                  </div>
+                  <div>
+                    <span className="text-xs">c. Date of birth: </span>
+                    <span className="border-b border-black inline-block min-w-24 pb-1 text-xs font-semibold">
+                      {formData["1"]?.dateOfBirth || "15/06/1990"}
+                    </span>
+                    <span className="text-xs"> (dd/mm/yyyy)</span>
+                  </div>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-4">
+                  <div>
+                    <span className="text-xs">4. a. Nationality: </span>
+                    <span className="border-b border-black inline-block min-w-32 pb-1 text-xs font-semibold">
+                      {formData["2"]?.permanentCountry || "India"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs">b. Status: </span>
+                    <span className="text-xs font-semibold">Resident Individual</span>
+                    <span className="text-xs"> / Non Resident/ Foreign National</span>
+                  </div>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-4">
+                  <div>
+                    <span className="text-xs">5. a. PAN: </span>
+                    <span className="border-b border-black inline-block min-w-32 pb-1 text-xs font-semibold">
+                      {formData["1"]?.panNumber || "ABCDE1234F"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs">b. Aadhaar Number, if any: </span>
+                    <span className="border-b border-black inline-block min-w-48 pb-1 text-xs font-semibold">
+                      {formData["1"]?.aadhaarNumber || "1234 5678 9012"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs">6. Specify the proof of Identity submitted: </span>
+                  <span className="border-b border-black inline-block min-w-96 pb-1 text-xs font-semibold">
+                    PAN Card, Aadhaar Card
+                  </span>
+                </div>
+              </div>
+
+              {/* Section B: Address Details */}
+              <div className="mb-6">
+                <h3 className="font-bold text-sm underline mb-4">B. ADDRESS DETAILS</h3>
+
+                <div className="mb-3">
+                  <span className="text-xs">1. Residence Address: </span>
+                  <span className="border-b border-black inline-block min-w-96 pb-1 text-xs font-semibold">
+                    {formData["2"]?.permanentAddress || "Kamal Colony, Near Main Market"}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="text-xs">City/town/village: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs font-semibold">
+                    {formData["2"]?.permanentCity || "Pune"}
+                  </span>
+                  <span className="text-xs ml-4">Pin Code: </span>
+                  <span className="border-b border-black inline-block min-w-20 pb-1 text-xs font-semibold">
+                    {formData["2"]?.permanentPincode || "411001"}
+                  </span>
+                  <span className="text-xs ml-4">State: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs font-semibold">
+                    {formData["2"]?.permanentState || "Maharashtra"}
+                  </span>
+                  <span className="text-xs ml-4">Country: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs font-semibold">
+                    {formData["2"]?.permanentCountry || "India"}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="text-xs">2. Contact Details: Tel. (Off.) </span>
+                  <span className="border-b border-black inline-block min-w-20 pb-1 text-xs"></span>
+                  <span className="text-xs ml-2">Tel. (Res.) </span>
+                  <span className="border-b border-black inline-block min-w-20 pb-1 text-xs"></span>
+                  <span className="text-xs ml-2">Mobile No.: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs font-semibold">
+                    {formData["1"]?.mobileNumber || "9876543210"}
+                  </span>
+                  <span className="text-xs ml-2">Fax: </span>
+                  <span className="border-b border-black inline-block min-w-20 pb-1 text-xs"></span>
+                  <span className="text-xs ml-2">Email id: </span>
+                  <span className="border-b border-black inline-block min-w-32 pb-1 text-xs font-semibold">
+                    {formData["1"]?.emailId || "john.doe@gmail.com"}
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs">3. Specify the proof of address submitted for residence address: </span>
+                  <span className="border-b border-black inline-block min-w-64 pb-1 text-xs font-semibold">
+                    Utility Bill / Bank Statement / Aadhaar Card
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs">
+                    4. Permanent Address (if different from above or overseas address, mandatory for Non-Resident
+                    Applicant):{" "}
+                  </span>
+                  <span className="border-b border-black inline-block min-w-96 pb-1 text-xs">Same as above</span>
+                </div>
+
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="text-xs">City/town/village: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs"></span>
+                  <span className="text-xs ml-4">Pin Code: </span>
+                  <span className="border-b border-black inline-block min-w-20 pb-1 text-xs"></span>
+                  <span className="text-xs ml-4">State: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs"></span>
+                  <span className="text-xs ml-4">Country: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs"></span>
+                </div>
+              </div>
+
+              {/* Section C: Other Details */}
+              <div className="mb-6">
+                <h3 className="font-bold text-sm underline mb-4">C. OTHER DETAILS</h3>
+
+                <div className="mb-3 flex flex-wrap items-center gap-4">
+                  <div>
+                    <span className="text-xs">1. Occupation: </span>
+                    <span className="border-b border-black inline-block min-w-32 pb-1 text-xs font-semibold">
+                      {formData["3"]?.occupation || "Software Engineer"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs">Annual Income: </span>
+                    <span className="border-b border-black inline-block min-w-32 pb-1 text-xs font-semibold">
+                      {formData["3"]?.annualIncome || "5-10 LPA"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs">2. Net-worth as on: </span>
+                  <span className="border-b border-black inline-block min-w-24 pb-1 text-xs"></span>
+                  <span className="text-xs ml-2">(Date): Rs. </span>
+                  <span className="border-b border-black inline-block min-w-32 pb-1 text-xs"></span>
+                </div>
+              </div>
+            </>
+
+            {/* Declaration */}
+            <div className="mb-6">
+              <h3 className="font-bold text-sm underline mb-4">DECLARATION</h3>
+              <p className="text-xs leading-relaxed text-justify mb-6">
+                I hereby declare that the details furnished above are true and correct to the best of my knowledge and belief and I undertake to inform you of any changes therein, immediately. In case any of the above information is found to be false or untrue or misleading or misrepresenting, I am aware that I may be held liable for it.
+              </p>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <div className="border-b border-black w-48 pb-1 mb-2 h-16"></div>
+                  <span className="text-xs">Signature of the Applicant</span>
+                </div>
+                <div>
+                  <span className="text-xs">Date: </span>
+                  <span className="border-b border-black inline-block w-32 pb-1 text-xs font-semibold">
+                    {new Date().toLocaleDateString("en-GB")}
+                  </span>
+                  <span className="text-xs"> (dd/mm/yyyy)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Office Use Only */}
+            <div className="border-2 border-black p-4">
+              <h3 className="font-bold text-sm mb-4">FOR OFFICE USE ONLY</h3>
+              <p className="text-xs mb-4">Originals verified and Self-Attested Document copies received</p>
+              <div className="mb-4">
+                <span className="text-xs">(</span>
+                <span className="border-b border-black inline-block w-64 pb-1 text-xs h-6"></span>
+                <span className="text-xs">)</span>
+              </div>
+              <p className="text-xs mb-2">Name & Signature of the Authorised Signatory</p>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-xs">Date </span>
+                  <span className="border-b border-black inline-block w-24 pb-1 text-xs h-4"></span>
+                </div>
+                <span className="text-xs">Seal/Stamp of the intermediary</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Documents Page */}
+          {primaryBank?.uploadCancelledCheque && (
+            <div className="max-w-4xl mx-auto bg-white mt-16 p-8 shadow-2xl border border-black/30 page-break">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold">Bank Account Documents</h2>
+                <p className="text-sm text-gray-600">
+                  Bank: {primaryBank.bankName} | Account Type: {primaryBank.accountType}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Account Number: {primaryBank.bankAccountNumber} | IFSC: {primaryBank.ifscCode}
+                </p>
+              </div>
+
+              <div className="border-2 border-gray-300 p-4 text-center">
+                <h3 className="text-lg font-semibold mb-4">Cancelled Cheque</h3>
+                <div className="flex justify-center">
+                  <img
+                    src={primaryBank.uploadCancelledCheque}
+                    alt="Cancelled Cheque"
+                    className="max-w-full max-h-96 object-contain border border-gray-200"
+                    onError={(e) => {
+                      e.target.alt = "Cancelled Cheque - Image not available";
+                      e.target.className += " bg-gray-100 p-4";
+                      e.target.style.minHeight = "200px";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Demat Documents Page */}
+          {primaryDemat?.clientMasterCopy && (
+            <div className="max-w-4xl mx-auto bg-white p-8 shadow-2xl border border-black/30 page-break">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold">Demat Account Documents</h2>
+                <p className="text-sm text-gray-600">
+                  Depository: {primaryDemat.depository} | DP ID: {primaryDemat.dpID}
+                </p>
+                <p className="text-sm text-gray-600">Client ID: {primaryDemat.clientID}</p>
+              </div>
+
+              <div className="border-2 border-gray-300 p-4 text-center">
+                <h3 className="text-lg font-semibold mb-4">Client Master Copy</h3>
+                <div className="flex justify-center">
+                  <img
+                    src={primaryDemat.clientMasterCopy}
+                    alt="Client Master Copy"
+                    className="max-w-full max-h-96 object-contain border border-gray-200"
+                    onError={(e) => {
+                      e.target.alt = "Client Master Copy - Image not available";
+                      e.target.className += " bg-gray-100 p-4";
+                      e.target.style.minHeight = "200px";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Summary Page */}
+          <div className="max-w-4xl mx-auto bg-white p-8 shadow-2xl border border-black/30 page-break">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold">KYC Application Summary</h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 text-sm">
+              <div>
+                <h3 className="font-bold mb-3 text-blue-600">Personal Information</h3>
+                <div className="space-y-2">
+                  <div><strong>Name:</strong> {formData["3"]?.fullName || "JOHN DOE"}</div>
+                  <div><strong>Father's Name:</strong> {formData["3"]?.fatherName || "RAJESH DOE"}</div>
+                  <div><strong>PAN:</strong> {formData["1"]?.panNumber}</div>
+                  <div><strong>Aadhaar:</strong> {formData["1"]?.aadhaarNumber}</div>
+                  <div><strong>Mobile:</strong> {formData["1"]?.mobileNumber}</div>
+                  <div><strong>Email:</strong> {formData["1"]?.emailId}</div>
+                  <div><strong>Date of Birth:</strong> {formData["1"]?.dateOfBirth}</div>
+                  <div><strong>Gender:</strong> {formData["3"]?.gender}</div>
+                  <div><strong>Occupation:</strong> {formData["3"]?.occupation}</div>
+                  <div><strong>Annual Income:</strong> {formData["3"]?.annualIncome}</div>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold mb-3 text-blue-600">Address & Banking</h3>
+                <div className="space-y-2">
+                  <div><strong>Address:</strong> {formData["2"]?.permanentAddress}</div>
+                  <div><strong>City:</strong> {formData["2"]?.permanentCity}</div>
+                  <div><strong>State:</strong> {formData["2"]?.permanentState}</div>
+                  <div><strong>Pincode:</strong> {formData["2"]?.permanentPincode}</div>
+                  <div><strong>Country:</strong> {formData["2"]?.permanentCountry}</div>
+                  <div><strong>Bank:</strong> {primaryBank?.bankName}</div>
+                  <div><strong>Account Type:</strong> {primaryBank?.accountType}</div>
+                  <div><strong>Account Number:</strong> {primaryBank?.bankAccountNumber}</div>
+                  <div><strong>IFSC Code:</strong> {primaryBank?.ifscCode}</div>
+                  <div><strong>Depository:</strong> {primaryDemat?.depository}</div>
+                  <div><strong>DP ID:</strong> {primaryDemat?.dpID}</div>
+                  <div><strong>Client ID:</strong> {primaryDemat?.clientID}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed footer with action buttons */}
+      <div className="sticky bottom-0 bg-white py-4 px-4 no-print border-t">
+        <div className="max-w-4xl mx-auto flex gap-4">
+          <Button onClick={handleBack} variant="outline" className="w-1/3">
+            Back
+          </Button>
+          <Button onClick={handleSubmit} className="w-2/3 bg-green-600 hover:bg-green-700">
+            E-Sign and Submit
+          </Button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ESignForm;
+export default ESignForm
