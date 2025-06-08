@@ -217,7 +217,7 @@ const InPersonVerificationForm = ({
         setLivenessChecks((prev) => [...prev, check]);
         setCheckProgress(((currentCheckIndex + 1) / checks.length) * 100);
         currentCheckIndex++;
-        setTimeout(runChecks, 500);
+        setTimeout(runChecks, 3000);
       } else {
         setCheckComplete(true);
       }
