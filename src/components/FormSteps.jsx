@@ -41,7 +41,7 @@ const steps = [
 
 const FormSteps = () => {
   const { step } = useSelector((state) => state.form);
-  // const step = 4;
+  // const step = 7;
   const router = useRouter();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
@@ -156,7 +156,6 @@ const FormSteps = () => {
             handleStepChange={handleStepChange}
           />
         );
-      case 7:
       case 7:
         return (
           <ESignForm
