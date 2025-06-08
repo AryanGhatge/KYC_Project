@@ -1,6 +1,9 @@
 const got = require("got");
 const User = require("../models/updated_user.model");
 
+const PORT = process.env.PORT || 8080;
+
+
 exports.updateUserProfile = async (req, res) => {
   try {
     if (!req.user) {
@@ -23,7 +26,7 @@ exports.updateUserProfile = async (req, res) => {
     if (panNumber && name) {
       try {
         const panResponse = await got.post(
-          "http://localhost:8081/v1/validation/verify-pan",
+          `http://localhost:${PORT}/v1/validation/verify-pan`,
           {
             json: {
               pan: panNumber,
@@ -73,7 +76,7 @@ exports.updateUserProfile = async (req, res) => {
 
       try {
         const bankResponse = await got.post(
-          "http://localhost:8081/v1/validation/verify-bank",
+          `http://localhost:${PORT}/v1/validation/verify-bank`,
           {
             json: {
               bank_account : bank_account,
