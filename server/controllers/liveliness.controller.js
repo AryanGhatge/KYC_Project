@@ -6,17 +6,17 @@ const axios = require("axios");
 
 exports.checkLivelinessController = async (req, res) => {
   try {
-    const { imageUrl } = req.body;
+    const { image } = req.body;
     const userId = req.user._id;
 
-    if (!imageUrl) {
+    if (!image) {
       return res
         .status(400)
         .json({ success: false, message: "Image URL is required" });
     }
 
     // Download image as buffer
-    const imageRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const imageRes = await axios.get(image, { responseType: "arraybuffer" });
     const imageBuffer = Buffer.from(imageRes.data, "binary");
 
     // Upload buffer to Cloudinary
