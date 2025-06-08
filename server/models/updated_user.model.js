@@ -181,7 +181,7 @@ const userSchemaUpdated = new mongoose.Schema({
       },
       uploadCancelCheck: {
         type: String,
-      }
+      },
     },
   ],
 
@@ -213,6 +213,9 @@ const userSchemaUpdated = new mongoose.Schema({
       },
     },
   ],
+  userImage: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("User_Updated", userSchemaUpdated);

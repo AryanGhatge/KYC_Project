@@ -4,6 +4,7 @@ const session = require("express-session");
 const passport = require("./config/passport");
 const MongoStore = require("connect-mongo");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
 const authRoutes = require("./routes/auth.routes");
 const updateUserRoute = require("./routes/updateUser.routes");
 // const panRoutes = require("./routes/pan.routes");
@@ -65,7 +66,7 @@ app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
 app.use("/v1/validation", panValidationRoutes);
 
-app.use("/v1/image", livelinessRoutes);
+app.use("/v1/image", isAuthenticated, livelinessRoutes);
 
 app.use("/v1/bankValidation", bankValidationRoutes);
 
