@@ -24,8 +24,9 @@ import {
   sampleDistricts,
   sampleStates,
 } from "@/lib/data/addressDetailsData";
-import { showToast } from "@/lib/showToast";
 import { addressService } from "@/lib/apiService/addressService";
+import { toast } from "sonner";
+import { AiOutlineInfoCircle } from "react-icons/ai";
 
 const AddressForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +41,24 @@ const AddressForm = ({ onSubmit, initialData, step, handleStepChange }) => {
       permanentState: "",
       permanentCountry: "",
     },
+    mode: "onChange",
   });
+
+  const { formState: { errors }, watch } = formMethods;
+  const allValues = watch();
+
+  // Function to check if all required fields are filled
+  const areAllFieldsFilled = () => {
+    return (
+      allValues.permanentAddress &&
+      allValues.permanentCity &&
+      allValues.permanentDistrict &&
+      allValues.permanentPincode &&
+      allValues.permanentState &&
+      allValues.permanentCountry &&
+      Object.keys(errors).length === 0
+    );
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -55,11 +73,11 @@ const AddressForm = ({ onSubmit, initialData, step, handleStepChange }) => {
     try {
       // const response = await addressService.registerAddress(data);
       console.log("Address details submitted successfully:", data);
-      // showToast.success("Details submitted successfully!");
+      toast.success("Address details submitted successfully!");
       onSubmit(data, 2);
     } catch (error) {
       console.error("Error submitting address details:", error);
-      showToast.error(
+      toast.error(
         error.message || "Something went wrong. Please try again."
       );
     } finally {
@@ -90,8 +108,14 @@ const handleBack = () => {
                 control={formMethods.control}
                 name="permanentAddress"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Permanent Address *</FormLabel>
+                  <FormItem>                    <FormLabel className="flex items-center gap-2">
+                      Permanent Address
+                      <span className="text-red-500">*</span>
+                      <span className="tooltip-container">
+                        <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                        <span className="tooltip-text">Enter your complete residential address including house/flat number and street name</span>
+                      </span>
+                    </FormLabel>
                     <FormControl>
                       <input
                         type="text"
@@ -132,8 +156,14 @@ const handleBack = () => {
                     control={formMethods.control}
                     name="permanentCity"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City *</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          City
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Select your city from the dropdown list</span>
+                          </span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -167,8 +197,14 @@ const handleBack = () => {
                     control={formMethods.control}
                     name="permanentDistrict"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>District *</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          District
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Select your district as per your state</span>
+                          </span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -204,8 +240,14 @@ const handleBack = () => {
                     control={formMethods.control}
                     name="permanentPincode"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pincode *</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          Pincode
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Enter your 6-digit postal code</span>
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <input
                             type="text"
@@ -226,8 +268,14 @@ const handleBack = () => {
                     control={formMethods.control}
                     name="permanentState"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State *</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          State
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Select your state from the dropdown list</span>
+                          </span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -277,9 +325,7 @@ const handleBack = () => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
-              <div className="flex justify-between mt-4">
+              />              <div className="flex justify-between mt-4">
                 <Button
                   type="button"
                   onClick={handleBack}
@@ -287,7 +333,12 @@ const handleBack = () => {
                 >
                   Back
                 </Button>
-                <Button type="submit" variant="default" disabled={isSubmitting}>
+                <Button 
+                  type="submit" 
+                  variant="default" 
+                  disabled={isSubmitting || !areAllFieldsFilled()}
+                  title={!areAllFieldsFilled() ? "Please fill all required fields correctly" : "Proceed to next step"}
+                >
                   {isSubmitting ? "Submitting..." : "Next"}
                 </Button>
               </div>

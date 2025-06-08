@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/v1";
 
@@ -14,10 +15,13 @@ const axiosInstance = axios.create({
 export const dataService = {
   updateData: async (formData) => {
     try {
+      // console.log("Sending data to server:", formData);
       const response = await axiosInstance.put('/data/update_data', formData);
+      console.log("Response from server:", response.data);
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
   },
