@@ -15,8 +15,10 @@ const { isAuthenticated } = require("./middleware/auth.middleware");
 const { cloudinaryConnect } = require("./config/cloudinaryConnect");
 
 
+//external validation routes
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
 const bankValidationRoutes = require("./routes/validation/bankValidation.routes");
+const ocrValidationRoutes = require("./routes/validation/ocrValidation.routes");
 
 const db = require("./config/dbConnect");
 
@@ -56,8 +58,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
+
+//Internal Use Only
 app.use("/v1/validation", panValidationRoutes);
 app.use("/v1/bankValidation", bankValidationRoutes);
+app.use("/v1/ocrValidation", ocrValidationRoutes);
+
 // app.use("/v1/pan", isAuthenticated, panRoutes);
 // app.use("/v1/address", isAuthenticated, addressRoutes);
 // app.use("/v1/bank", isAuthenticated, bankRoutes);
