@@ -41,7 +41,7 @@ const steps = [
 
 const FormSteps = () => {
   const { step } = useSelector((state) => state.form);
-  // const step = 7;
+  // const step = 6;
   const router = useRouter();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({});

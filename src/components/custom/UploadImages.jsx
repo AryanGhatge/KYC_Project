@@ -64,6 +64,26 @@ const UploadImages = ({ text, onSuccess, inPerson }) => {
     }
   };
 
+  const handleUpload = async (e) => {
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Store the file for later use
+      const result = {
+        info: {
+          secure_url: URL.createObjectURL(file),
+          file: file  // Pass the actual file
+        }
+      };
+      
+      onSuccess(result);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Error uploading image');
+    }
+  };
+
   return (
     <div>
       <button

@@ -14,11 +14,13 @@ import InPersonPhoto from "@/../public/inpersonphoto.png";
 import { FaLocationDot, FaCheck } from "react-icons/fa6";
 import UploadImages from "../UploadImages";
 import { toast, Toaster } from "sonner";
+import { verifyLiveliness } from "@/lib/apiService/livelinessService";
 
 const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const formMethods = useForm({
     defaultValues: {
@@ -84,6 +86,29 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
     toast.success("Image uploaded successfully!");
   };
 
+  const handleVerification = async () => {
+    try {
+      setIsLoading(true);
+      const result = await verifyLiveliness({
+        image: uploadedImageUrl,
+        // other required data
+      });
+      
+      // handle the verification result
+      if (result.success) {
+        toast.success("Verification successful!");
+        // handle success
+      } else {
+        toast.error(result.message || "Verification failed");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast.error("Error during verification");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFormSubmit = (data) => {
     if (!locationAllowed) {
       setError("location", {
@@ -103,7 +128,8 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
       return;
     }
 
-    onSubmit(data, 6);
+    console.log("Form data before verification:", data);
+    handleVerification();
   };
 
   const handleBack = () => {
@@ -224,6 +250,7 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
                 type="submit"
                 variant="default"
                 className="w-full py-3 text-lg transition"
+                isLoading={isLoading}
               >
                 Confirm & Proceed
               </Button>
