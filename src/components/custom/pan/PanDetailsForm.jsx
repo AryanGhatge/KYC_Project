@@ -37,7 +37,10 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
     mode: "onChange",
   });
 
-  const { formState: { isValid, errors }, watch } = formMethods;
+  const {
+    formState: { isValid, errors },
+    watch,
+  } = formMethods;
   const allValues = watch();
 
   // Function to check if all required fields are filled
@@ -203,14 +206,14 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center lg:my-28 lg:min-h-[calc(100%-20px)]">
-      <div className="w-full max-w-4xl p-4 bg-white rounded-lg  shadow-lg border-2 flex-col justify-between h-full">
-        <div>
+    <div className="w-full py-6">
+      <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg border-2">
+        <div className="p-6">
           <h2 className="text-2xl font-bold mb-6 text-center">Pan Details</h2>
           <Form {...formMethods}>
             <form
               onSubmit={formMethods.handleSubmit(handleSubmitForm)}
-              className="space-y-4"
+              className="space-y-6"
             >
               <div className="flex flex-col sm:flex-row sm:space-x-4">
                 {/* PAN Number */}
@@ -219,12 +222,17 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={formMethods.control}
                     name="panNumber"
                     render={({ field }) => (
-                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                      <FormItem>
+                        {" "}
+                        <FormLabel className="flex items-center gap-2">
                           PAN Number
                           <span className="text-red-500">*</span>
                           <span className="tooltip-container">
                             <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                            <span className="tooltip-text">Enter your 10-character Permanent Account Number (Format: ABCDE1234F)</span>
+                            <span className="tooltip-text">
+                              Enter your 10-character Permanent Account Number
+                              (Format: ABCDE1234F)
+                            </span>
                           </span>
                         </FormLabel>
                         <FormControl>
@@ -233,7 +241,7 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                             placeholder="Enter PAN Number (ABCDE1234F)"
                             {...field}
                             onChange={(e) => handlePanChange(e, field)}
-                            className="w-full p-2 border border-gray-300 rounded uppercase"
+                            className="w-full p-2 border border-gray-300 rounded"
                             maxLength={10}
                           />
                         </FormControl>
@@ -248,12 +256,17 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={formMethods.control}
                     name="mobileNumber"
                     render={({ field }) => (
-                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                      <FormItem>
+                        {" "}
+                        <FormLabel className="flex items-center gap-2">
                           Mobile Number
                           <span className="text-red-500">*</span>
                           <span className="tooltip-container">
                             <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                            <span className="tooltip-text">Enter your 10-digit mobile number starting with 6-9</span>
+                            <span className="tooltip-text">
+                              Enter your 10-digit mobile number starting with
+                              6-9
+                            </span>
                           </span>
                         </FormLabel>
                         <FormControl>
@@ -272,7 +285,6 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                   />
                 </div>
               </div>
-
               <div className="flex flex-col sm:flex-row sm:space-x-4">
                 {/* Date of Birth */}
                 <div className="flex-1">
@@ -280,12 +292,16 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={formMethods.control}
                     name="dateOfBirth"
                     render={({ field }) => (
-                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                      <FormItem>
+                        {" "}
+                        <FormLabel className="flex items-center gap-2">
                           Date of Birth
                           <span className="text-red-500">*</span>
                           <span className="tooltip-container">
                             <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                            <span className="tooltip-text">You must be at least 18 years old to proceed</span>
+                            <span className="tooltip-text">
+                              You must be at least 18 years old to proceed
+                            </span>
                           </span>
                         </FormLabel>
                         <FormControl>
@@ -309,12 +325,17 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={formMethods.control}
                     name="emailId"
                     render={({ field }) => (
-                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                      <FormItem>
+                        {" "}
+                        <FormLabel className="flex items-center gap-2">
                           Email ID
                           <span className="text-red-500">*</span>
                           <span className="tooltip-container">
                             <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                            <span className="tooltip-text">Enter a valid email address. This will be used for important communications</span>
+                            <span className="tooltip-text">
+                              Enter a valid email address. This will be used for
+                              important communications
+                            </span>
                           </span>
                         </FormLabel>
                         <FormControl>
@@ -331,19 +352,22 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                   />
                 </div>
               </div>
-
               {/* Who Are You */}
               <div>
                 <FormField
                   control={formMethods.control}
                   name="whoAreU"
                   render={({ field }) => (
-                    <FormItem>                      <FormLabel className="flex items-center gap-2">
-                        I am a
-                        <span className="text-red-500">*</span>
+                    <FormItem>
+                      {" "}
+                      <FormLabel className="flex items-center gap-2">
+                        I am a<span className="text-red-500">*</span>
                         <span className="tooltip-container">
                           <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                          <span className="tooltip-text">Select your residency status. This affects the KYC requirements and documentation needed</span>
+                          <span className="tooltip-text">
+                            Select your residency status. This affects the KYC
+                            requirements and documentation needed
+                          </span>
                         </span>
                       </FormLabel>
                       <Select
@@ -373,12 +397,17 @@ const PanDetailsForm = ({ onSubmit, initialData, step, handleStepChange }) => {
                     </FormItem>
                   )}
                 />
-              </div>              <div className="flex justify-end mt-4">
-                <Button 
-                  type="submit" 
-                  variant="default" 
+              </div>{" "}
+              <div className="flex justify-end mt-4">
+                <Button
+                  type="submit"
+                  variant="default"
                   disabled={isSubmitting || !areAllFieldsFilled()}
-                  title={!areAllFieldsFilled() ? "Please fill all required fields correctly" : "Proceed to next step"}
+                  title={
+                    !areAllFieldsFilled()
+                      ? "Please fill all required fields correctly"
+                      : "Proceed to next step"
+                  }
                 >
                   {isSubmitting ? "Submitting..." : "Next"}
                 </Button>

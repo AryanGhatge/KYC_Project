@@ -87,4 +87,14 @@ app.get("/v1/protected", isAuthenticated, (req, res) => {
 });
 
 // Start Server
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Global error handler caught:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -58,10 +58,13 @@ const ProfileDetailsForm = ({
       citizenship: false,
       informationConfirmation: false,
     },
-    mode: "onChange"
+    mode: "onChange",
   });
 
-  const { formState: { errors }, watch } = form;
+  const {
+    formState: { errors },
+    watch,
+  } = form;
   const allValues = watch();
 
   // Function to check if all required fields are filled
@@ -92,9 +95,7 @@ const ProfileDetailsForm = ({
       toast.success("Details submitted successfully!");
       onSubmit(data, 3);
     } catch (error) {
-      toast.error(
-        error.message || "Something went wrong. Please try again."
-      );
+      toast.error(error.message || "Something went wrong. Please try again.");
       console.error("Error submitting profile details:", error);
     } finally {
       setIsSubmitting(false);
@@ -107,9 +108,8 @@ const ProfileDetailsForm = ({
     handleStepChange(step - 1);
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center lg:min-h-[calc(100%-180px)] py-12">
-      <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border">
+  return (    <div className="flex flex-col items-center justify-center min-h-screen py-12 px-4">
+      <div className="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg border my-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
         <Form {...form}>
           <form
@@ -121,12 +121,16 @@ const ProfileDetailsForm = ({
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem>                    <FormLabel className="flex items-center gap-2">
+                  <FormItem>
+                    {" "}
+                    <FormLabel className="flex items-center gap-2">
                       Gender
                       <span className="text-red-500">*</span>
                       <span className="tooltip-container">
                         <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                        <span className="tooltip-text">Select your gender as per official documents</span>
+                        <span className="tooltip-text">
+                          Select your gender as per official documents
+                        </span>
                       </span>
                     </FormLabel>
                     <Select
@@ -147,29 +151,46 @@ const ProfileDetailsForm = ({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
+              />{" "}
               <FormField
                 control={form.control}
                 name="placeOfBirth"
                 render={({ field }) => (
-                  <FormItem>                    <FormLabel className="flex items-center gap-2">
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
                       Place of Birth
                       <span className="text-red-500">*</span>
                       <span className="tooltip-container">
                         <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                        <span className="tooltip-text">Enter the city/town where you were born as per your birth certificate</span>
+                        <span className="tooltip-text">
+                          Enter the city/town (minimum 3 characters) where you
+                          were born as per your birth certificate
+                        </span>
                       </span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter Place of Birth" {...field} />
+                      <Input
+                        placeholder="Enter Place of Birth (min. 3 characters)"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value.length < 3) {
+                            form.setError("placeOfBirth", {
+                              type: "manual",
+                              message:
+                                "Place of birth must be at least 3 characters",
+                            });
+                          } else {
+                            form.clearErrors("placeOfBirth");
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
             <div className="grid gap-6 md:grid-cols-2">
               {/* Occupation */}
               <div>
@@ -177,12 +198,17 @@ const ProfileDetailsForm = ({
                   control={form.control}
                   name="occupation"
                   render={({ field }) => (
-                    <FormItem>                      <FormLabel className="flex items-center gap-2 text-gray-700">
+                    <FormItem>
+                      {" "}
+                      <FormLabel className="flex items-center gap-2 text-gray-700">
                         Occupation
                         <span className="text-red-500">*</span>
                         <span className="tooltip-container">
                           <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                          <span className="tooltip-text">Select your current employment status or primary occupation</span>
+                          <span className="tooltip-text">
+                            Select your current employment status or primary
+                            occupation
+                          </span>
                         </span>
                       </FormLabel>
                       <Select
@@ -215,12 +241,17 @@ const ProfileDetailsForm = ({
                   control={form.control}
                   name="annualIncome"
                   render={({ field }) => (
-                    <FormItem>                      <FormLabel className="flex items-center gap-2 text-gray-700">
+                    <FormItem>
+                      {" "}
+                      <FormLabel className="flex items-center gap-2 text-gray-700">
                         Annual Income (LPA)
                         <span className="text-red-500">*</span>
                         <span className="tooltip-container">
                           <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
-                          <span className="tooltip-text">Select your annual income range in Lakhs Per Annum (LPA). This helps determine your investment capacity</span>
+                          <span className="tooltip-text">
+                            Select your annual income range in Lakhs Per Annum
+                            (LPA). This helps determine your investment capacity
+                          </span>
                         </span>
                       </FormLabel>
                       <Select
@@ -247,7 +278,6 @@ const ProfileDetailsForm = ({
                 />
               </div>
             </div>
-
             {/* Checkboxes */}
             <div className="space-y-4 mt-6">
               {/* Citizenship Checkbox */}
@@ -310,16 +340,18 @@ const ProfileDetailsForm = ({
                   </span>
                 </label>
               </div>
-            </div>            <div className="flex justify-between mt-6">
+            </div>{" "}
+            <div className="flex justify-between mt-6">
               <Button type="button" onClick={handleBack} variant="secondary">
                 Back
               </Button>
-              <Button 
-                type="submit" 
-                variant="default" 
-                title={!areAllFieldsFilled() ? 
-                  "Please fill all required fields and accept the terms and conditions" : 
-                  "Move to next step"
+              <Button
+                type="submit"
+                variant="default"
+                title={
+                  !areAllFieldsFilled()
+                    ? "Please fill all required fields and accept the terms and conditions"
+                    : "Move to next step"
                 }
                 disabled={isSubmitting || !areAllFieldsFilled()}
               >

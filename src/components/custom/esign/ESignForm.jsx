@@ -5,13 +5,52 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
+import confetti from "canvas-confetti";
 
-const ESignForm = (handleStepChange, step, steps, onsubmit, initialData) => {
+const ESignForm = ({ handleStepChange, step, steps, onSubmit, initialData }) => {
   const [formData, setFormData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const userData = useSelector((state) => state.auth);
   const fullName = userData?.user?.name;
+
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  useEffect(() => {
+    // Trigger confetti effect
+    setTimeout(() => {
+      setShowConfetti(true)
+      const duration = 3 * 1000
+      const animationEnd = Date.now() + duration
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min
+      }
+
+      const interval = setInterval(() => {
+        const timeLeft = animationEnd - Date.now()
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval)
+        }
+
+        const particleCount = 50 * (timeLeft / duration)
+
+        // since particles fall down, start a bit higher than random
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        })
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        })
+      }, 250)
+    }, 500)
+  }, [])
 
   useEffect(() => {
     // Load form data from localStorage
@@ -19,7 +58,7 @@ const ESignForm = (handleStepChange, step, steps, onsubmit, initialData) => {
     if (savedData) {
       setFormData(JSON.parse(savedData));
     } else {
-      console.error("No form data found in localStorage");
+      toast.error("No form data found in localStorage");
     }
   }, []);
 
@@ -377,7 +416,7 @@ const ESignForm = (handleStepChange, step, steps, onsubmit, initialData) => {
   };
 
   const handleBack = () => {
-    handleStepChange(currentStep - 1);
+        handleStepChange(step - 1);
   };
 
   return (

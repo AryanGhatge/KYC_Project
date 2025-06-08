@@ -15,11 +15,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-    <head>
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" />
-    </head>
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" />
+      </head>
+      <body className={inter.className} suppressHydrationWarning={true}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <MantineProvider>
             <Providers>{children}</Providers>

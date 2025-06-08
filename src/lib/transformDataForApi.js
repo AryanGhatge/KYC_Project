@@ -43,13 +43,8 @@ export function transformDataForAPI(localStorageData, name) {
       },
       bankDetails: localStorageData[4]?.bankDetails || [],
       dematDetails: localStorageData[5]?.dematDetails?.map(demat => {
-        // If clientMasterCopy contains a path, you might need to fetch the actual file
-        // and convert it to base64 here, or handle this separately
-        const clientMasterCopyBase64 = demat.clientMasterCopy?.path || "";
-        
         return {
           ...demat,
-          clientMasterCopy: clientMasterCopyBase64
         };
       }) || []
     };

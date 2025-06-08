@@ -28,6 +28,16 @@ const UploadImages = ({ text, onSuccess, inPerson }) => {
             width: 1280,
             height: 720,
             facingMode: "user", // Front camera
+            guidelines: true, // Show face guidelines
+            mirror: true, // Mirror the camera view for selfie
+          } : undefined,
+          text: inPerson ? {
+            take_photo: "Take your verification photo",
+            or: "or",
+            drag_n_drop: "Drag image file here",
+            select_file: "Browse files",
+            retry_upload: "Try again",
+            crop_message: "Please ensure your face and the OTP paper are clearly visible"
           } : undefined,
           styles: {
             palette: {
