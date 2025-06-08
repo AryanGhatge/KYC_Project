@@ -13,6 +13,8 @@ import Image from "next/image";
 import InPersonPhoto from "@/../public/inpersonphoto.png";
 import { FaLocationDot, FaCheck } from "react-icons/fa6";
 import UploadImages from "../UploadImages";
+import { toast, Toaster } from "sonner";
+
 const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChange }) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState("");
@@ -62,9 +64,11 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
         setLocationAllowed(true);
         setLocation(locationString);
         setValue("location", locationString);
+        toast.success("Location access granted!");
       },
       (error) => {
         console.error(error);
+        toast.error("Error accessing location. Please try again.");
         // Handle error or notify the user
       }
     );
@@ -77,6 +81,7 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
 
     // Store the uploaded URL in localStorage
     localStorage.setItem("inPersonVerificationImageUrl", secureUrl);
+    toast.success("Image uploaded successfully!");
   };
 
   const handleFormSubmit = (data) => {
@@ -85,6 +90,7 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
         type: "manual",
         message: "Please allow location access.",
       });
+      toast.error("Please allow location access to proceed.");
       return;
     }
 
@@ -93,6 +99,7 @@ const InPersonVerificationForm = ({ onSubmit, initialData, step, handleStepChang
         type: "manual",
         message: "Please upload an image.",
       });
+      toast.error("Please upload an image to proceed.");
       return;
     }
 

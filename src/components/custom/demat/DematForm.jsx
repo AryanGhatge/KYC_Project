@@ -25,6 +25,8 @@ import { dematSchema } from "@/lib/schemas/e-kyc/dematSchema";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import UploadImages from "../UploadImages";
+import { toast } from 'sonner';
+import { AiOutlineInfoCircle } from "react-icons/ai";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -33,10 +35,12 @@ const dematDetailsArraySchema = z.object({
 });
 
 const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedUrls, setUploadedUrls] = useState([]);
 
   const form = useForm({
     resolver: zodResolver(dematDetailsArraySchema),
+    mode: "onChange",
     defaultValues: initialData || {
       dematDetails: [
         {
@@ -54,6 +58,30 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
     control: form.control,
     name: "dematDetails",
   });
+
+  const {
+    formState: { errors },
+    watch,
+  } = form;
+
+  const areAllFieldsFilled = () => {
+    const formValues = form.getValues();
+    
+    // Check if form has any validation errors
+    if (Object.keys(form.formState.errors).length > 0) {
+      return false;
+    }
+
+    // Validate each demat account entry
+    return formValues.dematDetails.every((detail, index) => {
+      return (
+        detail.depository?.trim() !== "" &&
+        detail.dpID?.trim() !== "" &&
+        detail.clientID?.trim() !== "" &&
+        (detail.clientMasterCopy || uploadedUrls[index])
+      );
+    });
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -75,23 +103,29 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
       setUploadedUrls(urls);
     }
   }, [initialData]);
-
-  const handleSubmit = (data) => {
-    const submissionData = {
-      ...data,
-      dematDetails: data.dematDetails.map((detail, index) => ({
-        ...detail,
-        clientMasterCopy: uploadedUrls[index] || null,
-      })),
-    };
+  const handleSubmit = async (data) => {
+    try {
+      setIsSubmitting(true);
+      const submissionData = {
+        ...data,
+        dematDetails: data.dematDetails.map((detail, index) => ({
+          ...detail,
+          clientMasterCopy: uploadedUrls[index] || null,
+        })),
+      };
 
     // Store the uploaded URLs in localStorage
     localStorage.setItem(
       "dematDetailUploadedUrls",
       JSON.stringify(uploadedUrls)
-    );
-
-    onSubmit(submissionData, 5);
+    );      toast.success("Demat Details submitted successfully");
+      onSubmit(submissionData, 5);
+    } catch (error) {
+      console.error("Error submitting demat details:", error);
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddDematAccount = () => {
@@ -125,6 +159,7 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
       return newUrls;
     });
     form.setValue(`dematDetails.${index}.clientMasterCopy`, secureUrl);
+    toast.success("Image uploaded successfully");
   };
 
   // Example for BankDetailsForm
@@ -172,8 +207,14 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={form.control}
                     name={`dematDetails.${index}.depository`}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Depository</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          Depository
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Select your depository: NSDL (National Securities Depository Limited) or CDSL (Central Depository Services Limited)</span>
+                          </span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -196,10 +237,21 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={form.control}
                     name={`dematDetails.${index}.dpID`}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>DP ID</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          DP ID
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Enter your DP ID: For NSDL - starts with 'IN' followed by 14 digits, For CDSL - 16 digits</span>
+                          </span>
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter DP ID" {...field} />
+                          <Input 
+                            placeholder="Enter DP ID" 
+                            {...field}
+                            maxLength={16}
+                            style={{ textTransform: 'uppercase' }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -210,10 +262,22 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                   control={form.control}
                   name={`dematDetails.${index}.clientID`}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client ID</FormLabel>
+                    <FormItem>                      <FormLabel className="flex items-center gap-2">
+                        Client ID
+                        <span className="text-red-500">*</span>
+                        <span className="tooltip-container">
+                          <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                          <span className="tooltip-text">Enter your 16-digit Client ID provided by your broker</span>
+                        </span>
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Client ID" {...field} />
+                        <Input 
+                          placeholder="Enter Client ID" 
+                          {...field}
+                          maxLength={16}
+                          type="text"
+                          pattern="\d*"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,8 +289,14 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                     control={form.control}
                     name={`dematDetails.${index}.clientMasterCopy`}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Client Master Copy</FormLabel>
+                      <FormItem>                        <FormLabel className="flex items-center gap-2">
+                          Client Master Copy
+                          <span className="text-red-500">*</span>
+                          <span className="tooltip-container">
+                            <AiOutlineInfoCircle className="text-gray-500 cursor-help" />
+                            <span className="tooltip-text">Upload a clear copy of your Client Master Report (CMR) provided by your broker</span>
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <UploadImages
                             text={"Upload Client Master Copy"}
@@ -234,21 +304,26 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                               handleUploadSuccess(result, index)
                             }
                           />
-                        </FormControl>
-                        {uploadedUrls[index] && (
-                          <div className="mt-4">
-                            <Image
-                              src={uploadedUrls[index]}
-                              alt={`Uploaded cheque for account ${index + 1}`}
-                              width={300}
-                              height={200}
-                              style={{ width: "100%", height: "auto" }}
-                            />
-                            <p className="text-sm text-green-600 mt-2">
-                              Image uploaded successfully
+                        </FormControl>                        <div>
+                          {uploadedUrls[index] ? (
+                            <div className="mt-4">
+                              <Image
+                                src={uploadedUrls[index]}
+                                alt={`Uploaded Client Master Copy for account ${index + 1}`}
+                                width={300}
+                                height={200}
+                                style={{ width: "100%", height: "auto" }}
+                              />
+                              <p className="text-sm text-green-600 mt-2">
+                                Image uploaded successfully
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 mt-2">
+                              Please upload your Client Master Report for verification
                             </p>
-                          </div>
-                        )}
+                          )}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -309,8 +384,13 @@ const DematAccountForm= ({ onSubmit, initialData, step, handleStepChange }) => {
                 variant="secondary"
               >
                 Back
-              </Button>
-              <Button type="submit" variant="default">
+              </Button>              <Button 
+                type="submit" 
+                variant="default"
+                isLoading={isSubmitting}
+                disabled={!areAllFieldsFilled()}
+                title={!areAllFieldsFilled() ? "Please fill all required fields and upload Client Master Copy for each demat account" : "Proceed to next step"}
+              >
                 Next
               </Button>
             </div>

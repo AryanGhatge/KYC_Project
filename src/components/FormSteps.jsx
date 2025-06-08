@@ -46,6 +46,10 @@ const FormSteps = () => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(step);
+  const userData = useSelector((state) => state.auth);
+  const name = userData?.user?.name;
+  // console.log("User Data - ", userData);
+  // console.log("Name - ", name);
 
   useEffect(() => {
     // Load all form data from localStorage on component mount
@@ -80,7 +84,7 @@ const FormSteps = () => {
     if (currentStep === 5) {
       try {
         // Transform data to API format
-        const apiRequestData = transformDataForAPI(updatedFormData);
+        const apiRequestData = transformDataForAPI(updatedFormData, name);
 
         // Output the transformed data
         // console.log("Converted Data for API - ", JSON.stringify(apiRequestData, null, 2));

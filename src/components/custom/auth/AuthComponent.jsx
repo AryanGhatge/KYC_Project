@@ -10,6 +10,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/slices/authSlice";
+import { toast } from "sonner";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -85,14 +86,23 @@ const AuthComponent = ({ isLogin = true }) => {
         setTimeout(() => {
           router.push("/");
         }, 100);
+
+        if(!isLogin) {
+          toast.success("Registration successful! Please log in.");
+        } else {
+          toast.success("Login successful!");
+        }
+
       } else {
         setErrors({ submit: response.data.message || "Authentication failed" });
+        toast.error(response.data.message || "Authentication failed");
       }
     } catch (error) {
       console.error("Error:", error);
       setErrors({
         submit: error.response?.data?.message || "An error occurred. Please try again."
       });
+      toast.error(error.response?.data?.message || "An error occurred. Please try again.");
     }
   };
 
