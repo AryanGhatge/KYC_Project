@@ -26,7 +26,7 @@ exports.checkLivelinessController = async (req, res) => {
     );
 
     // Generate verification ID
-    const verificationId = generateVerificationId();
+    const verificationId = generateVerificationId(true);
 
     // Call liveliness service with buffer
     const result = await checkLivelinessService(imageBuffer, verificationId);
