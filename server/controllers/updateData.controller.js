@@ -76,13 +76,18 @@ exports.updateUserProfile = async (req, res) => {
       console.log("Doing bank verification");
 
       try {
+        // console.log("Verifying bank details:", {
+        //   bank_account,
+        //   ifsc,
+        //   name: updateData.name,
+        // });
         const bankResponse = await got.post(
-          `http://localhost:${PORT}/v1/validation/verify-bank`,
+          `http://localhost:${PORT}/v1/bankValidation/verify-bank`,
           {
             json: {
               bank_account : bank_account,
               ifsc : ifsc,
-              name : name,
+              name : updateData.name,
               verification_id: "kyc-bank-verification-id",
             },
             responseType: "json",
