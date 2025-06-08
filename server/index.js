@@ -4,6 +4,7 @@ const session = require("express-session");
 const passport = require("./config/passport");
 const MongoStore = require("connect-mongo");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
 const authRoutes = require("./routes/auth.routes");
 const updateUserRoute = require("./routes/updateUser.routes");
 // const panRoutes = require("./routes/pan.routes");
@@ -13,7 +14,7 @@ const updateUserRoute = require("./routes/updateUser.routes");
 // const profileRoutes = require("./routes/profile.routes");
 const { isAuthenticated } = require("./middleware/auth.middleware");
 const { cloudinaryConnect } = require("./config/cloudinaryConnect");
-
+const livelinessRoutes = require("./routes/validation/liveliness.route");
 
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
 const bankValidationRoutes = require("./routes/validation/bankValidation.routes");
@@ -41,6 +42,13 @@ app.use(
   })
 );
 
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
+
 // Session Middleware
 app.use(
   session({
@@ -57,7 +65,11 @@ app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
 app.use("/v1/validation", panValidationRoutes);
+
+app.use("/v1/image", isAuthenticated, livelinessRoutes);
+
 app.use("/v1/bankValidation", bankValidationRoutes);
+
 // app.use("/v1/pan", isAuthenticated, panRoutes);
 // app.use("/v1/address", isAuthenticated, addressRoutes);
 // app.use("/v1/bank", isAuthenticated, bankRoutes);

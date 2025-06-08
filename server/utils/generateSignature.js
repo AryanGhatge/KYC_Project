@@ -1,10 +1,8 @@
-const got = require("got");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-// Generate X-Cf-Signature (required even in sandbox now)
-exports.generateSignature = (clientId, publicKeyPath) => {
+module.exports.generateSignature = (clientId, publicKeyPath) => {
   const timestamp = Math.floor(Date.now() / 1000);
   const dataToEncrypt = `${clientId}.${timestamp}`;
 
