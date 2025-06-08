@@ -18,6 +18,7 @@ const livelinessRoutes = require("./routes/validation/liveliness.route");
 
 const panValidationRoutes = require("./routes/validation/panValidation.routes");
 const bankValidationRoutes = require("./routes/validation/bankValidation.routes");
+const userDetailsRoutes = require("./routes/user.route");
 
 const db = require("./config/dbConnect");
 
@@ -65,10 +66,9 @@ app.use(passport.session());
 app.use("/v1/auth", authRoutes);
 app.use("/v1/data", isAuthenticated, updateUserRoute);
 app.use("/v1/validation", panValidationRoutes);
-
 app.use("/v1/image", isAuthenticated, livelinessRoutes);
-
 app.use("/v1/bankValidation", bankValidationRoutes);
+app.use("/v1/user", userDetailsRoutes);
 
 // app.use("/v1/pan", isAuthenticated, panRoutes);
 // app.use("/v1/address", isAuthenticated, addressRoutes);

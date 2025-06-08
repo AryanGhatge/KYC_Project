@@ -1,13 +1,15 @@
-const fs = require("fs");
 const FormData = require("form-data");
 const got = require("got");
 const { generateSignature } = require("../utils/generateSignature");
 require("dotenv").config();
 
-exports.checkLivelinessService = async (imageFile, verificationId) => {
+exports.checkLivelinessService = async (imageBuffer, verificationId) => {
   const form = new FormData();
   form.append("verification_id", verificationId);
-  form.append("image", fs.createReadStream(imageFile.tempFilePath));
+  form.append("image", imageBuffer, {
+    filename: "image.jpg",
+    contentType: "image/jpeg",
+  });
   form.append("strict_check", "true");
 
   const clientId = process.env.CF_CLIENT_ID;

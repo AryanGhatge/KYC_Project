@@ -2,31 +2,37 @@ const { checkLivelinessService } = require("../services/liveliness.service");
 const { generateVerificationId } = require("../utils/generateVeficationId");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const User = require("../models/updated_user.model");
+const axios = require("axios");
 
 exports.checkLivelinessController = async (req, res) => {
   try {
-    if (!req.files || !req.files.image) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Image file is required" });
-    }
-
-    const imageFile = req.files.image;
+    const { imageUrl } = req.body;
     const userId = req.user._id;
 
-    // ✅ Fixed: Use imageFile, not 'thumbnail'
+    if (!imageUrl) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Image URL is required" });
+    }
+
+    // Download image as buffer
+    const imageRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const imageBuffer = Buffer.from(imageRes.data, "binary");
+
+    // Upload buffer to Cloudinary
     const uploaded = await uploadImageToCloudinary(
-      imageFile,
+      imageBuffer,
       process.env.FOLDER_NAME
     );
 
-    const clientId = process.env.CF_CLIENT_ID;
-    const publicKeyPath = process.env.CF_PUBLIC_KEY_PATH;
+    // Generate verification ID
     const verificationId = generateVerificationId();
 
-    const result = await checkLivelinessService(imageFile, verificationId);
+    // Call liveliness service with buffer
+    const result = await checkLivelinessService(imageBuffer, verificationId);
 
-    if (result.status == "Multiple Face Detected") {
+    // Handle liveliness results
+    if (result.status === "Multiple Face Detected") {
       return res.status(400).json({
         success: false,
         message: "Liveliness check failed - Multiple faces detected",
@@ -34,7 +40,7 @@ exports.checkLivelinessController = async (req, res) => {
       });
     }
 
-    if (result.status == "Face not detected") {
+    if (result.status === "Face not detected") {
       return res.status(400).json({
         success: false,
         message: "Liveliness check failed - Face not detected",
@@ -42,17 +48,17 @@ exports.checkLivelinessController = async (req, res) => {
       });
     }
 
-    // ✅ Update user's ImageUrl
-    const updatedUser = await User.findByIdAndUpdate(
+    // Update user image URL in DB
+    await User.findByIdAndUpdate(
       userId,
       { $set: { userImage: uploaded.secure_url } },
       { new: true, runValidators: true }
     );
 
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
     console.error("Controller Error:", error.message || error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Liveliness check failed",
       error: error.response?.body || error.message,
