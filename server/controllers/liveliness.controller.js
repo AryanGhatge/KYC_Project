@@ -20,10 +20,10 @@ exports.checkLivelinessController = async (req, res) => {
     const imageBuffer = Buffer.from(imageRes.data, "binary");
 
     // Upload buffer to Cloudinary
-    const uploaded = await uploadImageToCloudinary(
-      imageBuffer,
-      process.env.FOLDER_NAME
-    );
+    // const uploaded = await uploadImageToCloudinary(
+    //   imageBuffer,
+    //   process.env.FOLDER_NAME
+    // );
 
     // Generate verification ID
     const verificationId = generateVerificationId(true);
@@ -51,7 +51,8 @@ exports.checkLivelinessController = async (req, res) => {
     // Update user image URL in DB
     await User.findByIdAndUpdate(
       userId,
-      { $set: { userImage: uploaded.secure_url } },
+      { $set: { userImage: "" //uploaded.secure_url 
+       } },
       { new: true, runValidators: true }
     );
 
